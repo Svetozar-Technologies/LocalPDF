@@ -1,0 +1,283 @@
+"""File validation, platform detection, disk space, and formatting utilities."""
+
+import os
+import sys
+import shutil
+import platform
+import subprocess
+from pathlib import Path
+from dataclasses import dataclass
+from enum import Enum
+from typing import Optional, Tuple
+
+
+class FileType(Enum):
+    PDF = "pdf"
+    PPT = "ppt"
+    PPTX = "pptx"
+
+
+@dataclass
+class ValidationResult:
+    valid: bool
+    error_message: str = ""
+    file_size_bytes: int = 0
+    file_type: Optional[FileType] = None
+    is_encrypted: bool = False
+    page_count: int = 0
+
+
+@dataclass
+class LibreOfficeInfo:
+    found: bool
+    path: str = ""
+    version: str = ""
+    install_instructions: str = ""
+
+
+def validate_pdf(file_path: str) -> ValidationResult:
+    """Validate a PDF file for compression."""
+    if not file_path:
+        return ValidationResult(False, "No file selected.")
+
+    if not os.path.exists(file_path):
+        return ValidationResult(False, f"File not found: {os.path.basename(file_path)}")
+
+    ext = Path(file_path).suffix.lower()
+    if ext != ".pdf":
+        return ValidationResult(False, f"Expected a PDF file, got '{ext}' file.")
+
+    file_size = os.path.getsize(file_path)
+    if file_size == 0:
+        return ValidationResult(False, "The file is empty (0 bytes).")
+
+    try:
+        import fitz
+        doc = fitz.open(file_path)
+    except Exception as e:
+        return ValidationResult(False, f"Cannot open this PDF. It may be corrupted.\n({e})")
+
+    if doc.is_encrypted:
+        doc.close()
+        return ValidationResult(
+            False,
+            "This PDF is password-protected. Please unlock it first.",
+            file_size_bytes=file_size,
+            file_type=FileType.PDF,
+            is_encrypted=True,
+        )
+
+    page_count = len(doc)
+    doc.close()
+
+    if page_count == 0:
+        return ValidationResult(False, "This PDF has no pages.", file_size_bytes=file_size, file_type=FileType.PDF)
+
+    return ValidationResult(
+        valid=True,
+        file_size_bytes=file_size,
+        file_type=FileType.PDF,
+        page_count=page_count,
+    )
+
+
+def validate_ppt(file_path: str) -> ValidationResult:
+    """Validate a PPT/PPTX file for conversion."""
+    if not file_path:
+        return ValidationResult(False, "No file selected.")
+
+    if not os.path.exists(file_path):
+        return ValidationResult(False, f"File not found: {os.path.basename(file_path)}")
+
+    ext = Path(file_path).suffix.lower()
+    if ext not in (".ppt", ".pptx"):
+        return ValidationResult(False, f"Expected a PowerPoint file (.ppt or .pptx), got '{ext}'.")
+
+    file_size = os.path.getsize(file_path)
+    if file_size == 0:
+        return ValidationResult(False, "The file is empty (0 bytes).")
+
+    file_type = FileType.PPTX if ext == ".pptx" else FileType.PPT
+
+    # Basic magic byte check for PPTX (ZIP) or PPT (OLE)
+    try:
+        with open(file_path, "rb") as f:
+            header = f.read(8)
+        if ext == ".pptx" and header[:4] != b"PK\x03\x04":
+            return ValidationResult(False, "This file appears to be corrupted (not a valid PPTX).")
+        if ext == ".ppt" and header[:8] != b"\xd0\xcf\x11\xe0\xa1\xb1\x1a\xe1":
+            return ValidationResult(False, "This file appears to be corrupted (not a valid PPT).")
+    except Exception as e:
+        return ValidationResult(False, f"Cannot read this file: {e}")
+
+    return ValidationResult(
+        valid=True,
+        file_size_bytes=file_size,
+        file_type=file_type,
+    )
+
+
+def format_file_size(size_bytes: int) -> str:
+    """Format bytes to human-readable string."""
+    if size_bytes < 0:
+        return "0 B"
+    if size_bytes < 1024:
+        return f"{size_bytes} B"
+    if size_bytes < 1024 * 1024:
+        return f"{size_bytes / 1024:.1f} KB"
+    if size_bytes < 1024 * 1024 * 1024:
+        return f"{size_bytes / (1024 * 1024):.1f} MB"
+    return f"{size_bytes / (1024 * 1024 * 1024):.2f} GB"
+
+
+def parse_target_size_mb(value: float) -> int:
+    """Convert MB to bytes. Raises ValueError if invalid."""
+    if value <= 0:
+        raise ValueError("Target size must be greater than 0.")
+    return int(value * 1024 * 1024)
+
+
+def get_output_path(input_path: str, suffix: str = "_compressed") -> str:
+    """Generate an output path that doesn't overwrite the input file."""
+    p = Path(input_path)
+    base = p.stem + suffix
+    ext = p.suffix
+    output = p.parent / (base + ext)
+
+    counter = 1
+    while output.exists():
+        output = p.parent / (f"{base}({counter}){ext}")
+        counter += 1
+
+    return str(output)
+
+
+def check_disk_space(output_dir: str, required_bytes: int) -> Tuple[bool, str]:
+    """Check if output directory has enough free disk space."""
+    try:
+        stat = shutil.disk_usage(output_dir)
+        # Require 2x safety margin
+        needed = required_bytes * 2
+        if stat.free < needed:
+            return (
+                False,
+                f"Not enough disk space. Need {format_file_size(needed)}, "
+                f"only {format_file_size(stat.free)} available.",
+            )
+        return (True, "")
+    except Exception as e:
+        return (True, "")  # If we can't check, proceed anyway
+
+
+def get_platform() -> str:
+    """Return 'macos', 'windows', or 'linux'."""
+    system = platform.system().lower()
+    if system == "darwin":
+        return "macos"
+    if system == "windows":
+        return "windows"
+    return "linux"
+
+
+def detect_libreoffice() -> LibreOfficeInfo:
+    """Detect LibreOffice installation on the system."""
+    plat = get_platform()
+
+    search_paths = []
+    if plat == "macos":
+        search_paths = [
+            "/Applications/LibreOffice.app/Contents/MacOS/soffice",
+            "/opt/homebrew/bin/soffice",
+            "soffice",
+        ]
+    elif plat == "windows":
+        search_paths = [
+            r"C:\Program Files\LibreOffice\program\soffice.exe",
+            r"C:\Program Files (x86)\LibreOffice\program\soffice.exe",
+            "soffice",
+        ]
+    else:
+        search_paths = [
+            "/usr/bin/soffice",
+            "/usr/bin/libreoffice",
+            "soffice",
+            "libreoffice",
+        ]
+
+    for path in search_paths:
+        resolved = shutil.which(path) if not os.path.isabs(path) else path
+        if resolved and os.path.isfile(resolved):
+            # Try to get version
+            version = ""
+            try:
+                result = subprocess.run(
+                    [resolved, "--version"],
+                    capture_output=True, text=True, timeout=10,
+                )
+                version = result.stdout.strip()
+            except Exception:
+                pass
+            return LibreOfficeInfo(found=True, path=resolved, version=version)
+
+    return LibreOfficeInfo(
+        found=False,
+        install_instructions=get_libreoffice_install_instructions(),
+    )
+
+
+def get_libreoffice_install_instructions() -> str:
+    """Return platform-specific LibreOffice install instructions."""
+    plat = get_platform()
+    if plat == "macos":
+        return (
+            "LibreOffice is needed for PPT conversion.\n\n"
+            "Install it free from:\nhttps://www.libreoffice.org/download\n\n"
+            "Or with Homebrew:\nbrew install --cask libreoffice"
+        )
+    if plat == "windows":
+        return (
+            "LibreOffice is needed for PPT conversion.\n\n"
+            "Download the free installer from:\nhttps://www.libreoffice.org/download\n\n"
+            "Run the installer and restart LocalPDF."
+        )
+    return (
+        "LibreOffice is needed for PPT conversion.\n\n"
+        "Install via your package manager:\nsudo apt install libreoffice\n\n"
+        "Or download from:\nhttps://www.libreoffice.org/download"
+    )
+
+
+def validate_image(file_path: str) -> ValidationResult:
+    """Validate an image file for Image-to-PDF conversion."""
+    if not file_path:
+        return ValidationResult(False, "No file selected.")
+
+    if not os.path.exists(file_path):
+        return ValidationResult(False, f"File not found: {os.path.basename(file_path)}")
+
+    ext = Path(file_path).suffix.lower()
+    valid_exts = {".jpg", ".jpeg", ".png", ".bmp", ".tiff", ".tif", ".webp"}
+    if ext not in valid_exts:
+        return ValidationResult(False, f"Unsupported image format: '{ext}'")
+
+    file_size = os.path.getsize(file_path)
+    if file_size == 0:
+        return ValidationResult(False, "The file is empty (0 bytes).")
+
+    try:
+        from PIL import Image
+        img = Image.open(file_path)
+        img.verify()
+    except Exception as e:
+        return ValidationResult(False, f"Cannot open image: {e}")
+
+    return ValidationResult(valid=True, file_size_bytes=file_size)
+
+
+def get_asset_path(relative_path: str) -> str:
+    """Get absolute path to an asset, works for dev and PyInstaller."""
+    if getattr(sys, "frozen", False):
+        base_path = sys._MEIPASS
+    else:
+        base_path = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+    return os.path.join(base_path, relative_path)

@@ -1,0 +1,53 @@
+"""Background worker for Image-to-PDF conversion."""
+
+from PyQt6.QtCore import QThread, pyqtSignal
+from typing import List
+
+from core.image_to_pdf import ImageToPdfConverter, ImageToPdfResult, PageOrientation
+
+
+class ImageToPdfWorker(QThread):
+    """Runs Image-to-PDF conversion in a background thread."""
+
+    progress = pyqtSignal(int, int, str)
+    finished = pyqtSignal(object)
+    error = pyqtSignal(str)
+
+    def __init__(
+        self,
+        image_paths: List[str],
+        output_path: str,
+        orientation: PageOrientation = PageOrientation.AUTO,
+        parent=None,
+    ):
+        super().__init__(parent)
+        self._image_paths = image_paths
+        self._output_path = output_path
+        self._orientation = orientation
+        self._cancelled = False
+        self._converter = ImageToPdfConverter()
+
+    def run(self):
+        try:
+            result = self._converter.convert(
+                self._image_paths,
+                self._output_path,
+                self._orientation,
+                on_progress=self._on_progress,
+                is_cancelled=self._is_cancelled,
+            )
+            if not self._cancelled:
+                self.finished.emit(result)
+        except Exception as e:
+            if not self._cancelled:
+                self.error.emit(f"Unexpected error: {str(e)}")
+
+    def cancel(self):
+        self._cancelled = True
+
+    def _on_progress(self, step: int, total: int, message: str):
+        if not self._cancelled:
+            self.progress.emit(step, total, message)
+
+    def _is_cancelled(self) -> bool:
+        return self._cancelled
