@@ -11,8 +11,12 @@ from ui.compress_widget import CompressWidget
 from ui.batch_compress_widget import BatchCompressWidget
 from ui.merge_widget import MergeWidget
 from ui.split_widget import SplitWidget
+from ui.protect_widget import ProtectWidget
+from ui.watermark_widget import WatermarkWidget
 from ui.image_to_pdf_widget import ImageToPdfWidget
+from ui.pdf_to_image_widget import PDFToImageWidget
 from ui.convert_widget import ConvertWidget
+from ui.ocr_widget import OCRWidget
 from ui.settings_widget import SettingsWidget
 from ui.theme import ThemeManager
 
@@ -31,7 +35,7 @@ class MainWindow(QMainWindow):
     def _setup_ui(self):
         self.setWindowTitle("LocalPDF")
         self.setMinimumSize(900, 650)
-        self.resize(1000, 700)
+        self.resize(1050, 750)
 
         central = QWidget()
         self.setCentralWidget(central)
@@ -52,24 +56,32 @@ class MainWindow(QMainWindow):
         self._batch_compress_widget = BatchCompressWidget()
         self._merge_widget = MergeWidget()
         self._split_widget = SplitWidget()
+        self._protect_widget = ProtectWidget()
+        self._watermark_widget = WatermarkWidget()
         self._image_to_pdf_widget = ImageToPdfWidget()
+        self._pdf_to_image_widget = PDFToImageWidget()
         self._convert_widget = ConvertWidget()
+        self._ocr_widget = OCRWidget()
         self._settings_widget = SettingsWidget(theme_manager=self._theme_manager)
 
-        self._stack.addWidget(self._compress_widget)       # 0
-        self._stack.addWidget(self._batch_compress_widget)  # 1
-        self._stack.addWidget(self._merge_widget)           # 2
-        self._stack.addWidget(self._split_widget)           # 3
-        self._stack.addWidget(self._image_to_pdf_widget)    # 4
-        self._stack.addWidget(self._convert_widget)         # 5
-        self._stack.addWidget(self._settings_widget)        # 6
+        self._stack.addWidget(self._compress_widget)        # 0
+        self._stack.addWidget(self._batch_compress_widget)   # 1
+        self._stack.addWidget(self._merge_widget)            # 2
+        self._stack.addWidget(self._split_widget)            # 3
+        self._stack.addWidget(self._protect_widget)          # 4
+        self._stack.addWidget(self._watermark_widget)        # 5
+        self._stack.addWidget(self._image_to_pdf_widget)     # 6
+        self._stack.addWidget(self._pdf_to_image_widget)     # 7
+        self._stack.addWidget(self._convert_widget)          # 8
+        self._stack.addWidget(self._ocr_widget)              # 9
+        self._stack.addWidget(self._settings_widget)         # 10
 
         main_layout.addWidget(self._stack, 1)
 
     def _create_sidebar(self) -> QWidget:
         sidebar = QFrame()
         sidebar.setObjectName("sidebar")
-        sidebar.setFixedWidth(220)
+        sidebar.setFixedWidth(230)
 
         layout = QVBoxLayout(sidebar)
         layout.setContentsMargins(0, 0, 0, 0)
@@ -84,32 +96,82 @@ class MainWindow(QMainWindow):
         subtitle.setObjectName("appSubtitle")
         layout.addWidget(subtitle)
 
-        layout.addSpacing(8)
+        layout.addSpacing(4)
 
-        # Navigation buttons
-        nav_items = [
-            ("Compress PDF", 0),
-            ("Batch Compress", 1),
-            ("Merge PDFs", 2),
-            ("Split PDF", 3),
-            ("Image to PDF", 4),
-            ("Convert PPT", 5),
-            ("Settings", 6),
+        # --- PDF Tools section ---
+        section1 = QLabel("  PDF TOOLS")
+        section1.setObjectName("sidebarSection")
+        layout.addWidget(section1)
+
+        pdf_tools = [
+            ("\U0001F4E6  Compress PDF", 0),
+            ("\U0001F4DA  Batch Compress", 1),
+            ("\U0001F517  Merge PDFs", 2),
+            ("\U00002702  Split PDF", 3),
+            ("\U0001F512  Protect / Unlock", 4),
+            ("\U0001F4A7  Watermark", 5),
         ]
 
-        for label, index in nav_items:
-            btn = QPushButton(f"  {label}")
+        for label, index in pdf_tools:
+            btn = QPushButton(label)
             btn.setProperty("class", "navButton")
-            btn.setFixedHeight(48)
+            btn.setFixedHeight(38)
             btn.setCursor(Qt.CursorShape.PointingHandCursor)
             btn.clicked.connect(lambda checked, i=index: self._switch_tab(i))
             layout.addWidget(btn)
             self._nav_buttons.append(btn)
 
+        # --- Convert section ---
+        section2 = QLabel("  CONVERT")
+        section2.setObjectName("sidebarSection")
+        layout.addWidget(section2)
+
+        convert_tools = [
+            ("\U0001F5BC  Image to PDF", 6),
+            ("\U0001F4F7  PDF to Image", 7),
+            ("\U0001F4CA  Convert PPT", 8),
+        ]
+
+        for label, index in convert_tools:
+            btn = QPushButton(label)
+            btn.setProperty("class", "navButton")
+            btn.setFixedHeight(38)
+            btn.setCursor(Qt.CursorShape.PointingHandCursor)
+            btn.clicked.connect(lambda checked, i=index: self._switch_tab(i))
+            layout.addWidget(btn)
+            self._nav_buttons.append(btn)
+
+        # --- AI Tools section ---
+        section3 = QLabel("  AI TOOLS")
+        section3.setObjectName("sidebarSection")
+        layout.addWidget(section3)
+
+        ai_tools = [
+            ("\U0001F50D  OCR (Scan to Text)", 9),
+        ]
+
+        for label, index in ai_tools:
+            btn = QPushButton(label)
+            btn.setProperty("class", "navButton")
+            btn.setFixedHeight(38)
+            btn.setCursor(Qt.CursorShape.PointingHandCursor)
+            btn.clicked.connect(lambda checked, i=index: self._switch_tab(i))
+            layout.addWidget(btn)
+            self._nav_buttons.append(btn)
+
+        # --- Settings (at bottom) ---
         layout.addStretch()
 
+        settings_btn = QPushButton("\u2699\uFE0F  Settings")
+        settings_btn.setProperty("class", "navButton")
+        settings_btn.setFixedHeight(38)
+        settings_btn.setCursor(Qt.CursorShape.PointingHandCursor)
+        settings_btn.clicked.connect(lambda checked: self._switch_tab(10))
+        layout.addWidget(settings_btn)
+        self._nav_buttons.append(settings_btn)
+
         # Version
-        version = QLabel("v1.1.0")
+        version = QLabel("v1.0.0")
         version.setObjectName("versionLabel")
         layout.addWidget(version)
 
@@ -147,9 +209,13 @@ class MainWindow(QMainWindow):
             ("Batch Compress", "Ctrl+2", 1),
             ("Merge PDFs", "Ctrl+3", 2),
             ("Split PDF", "Ctrl+4", 3),
-            ("Image to PDF", "Ctrl+5", 4),
-            ("Convert PPT", "Ctrl+6", 5),
-            ("Settings", "Ctrl+,", 6),
+            ("Protect / Unlock", "Ctrl+5", 4),
+            ("Watermark", "Ctrl+6", 5),
+            ("Image to PDF", "Ctrl+7", 6),
+            ("PDF to Image", "Ctrl+8", 7),
+            ("Convert PPT", "Ctrl+9", 8),
+            ("OCR", "Ctrl+0", 9),
+            ("Settings", "Ctrl+,", 10),
         ]
 
         for label, shortcut, index in nav_actions:
@@ -167,6 +233,10 @@ class MainWindow(QMainWindow):
         self._batch_compress_widget.cleanup()
         self._merge_widget.cleanup()
         self._split_widget.cleanup()
+        self._protect_widget.cleanup()
+        self._watermark_widget.cleanup()
         self._image_to_pdf_widget.cleanup()
+        self._pdf_to_image_widget.cleanup()
         self._convert_widget.cleanup()
+        self._ocr_widget.cleanup()
         event.accept()

@@ -1,8 +1,10 @@
 """Theme management: light/dark mode toggle, QSS loading."""
 
+import sys
 from pathlib import Path
 from PyQt6.QtWidgets import QApplication
 from PyQt6.QtCore import QSettings
+from PyQt6.QtGui import QFont
 
 from core.utils import get_asset_path
 
@@ -17,6 +19,18 @@ class ThemeManager:
         self._app = app
         self._settings = QSettings("PrepLadder", "LocalPDF")
         self._current_theme = self._settings.value("theme", self.LIGHT)
+        self._setup_font()
+
+    def _setup_font(self):
+        """Set system-native font for macOS/Windows."""
+        if sys.platform == "darwin":
+            font = QFont(".AppleSystemUIFont", 13)
+        elif sys.platform == "win32":
+            font = QFont("Segoe UI", 10)
+        else:
+            font = QFont("Ubuntu", 10)
+        font.setHintingPreference(QFont.HintingPreference.PreferNoHinting)
+        self._app.setFont(font)
 
     def apply_theme(self, theme: str = None):
         """Load and apply the QSS file for the given theme."""

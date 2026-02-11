@@ -1,0 +1,103 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1024 1024" width="1024" height="1024">
+  <defs>
+    <!-- Background gradient — deep blue to royal blue -->
+    <linearGradient id="bgGrad" x1="0" y1="0" x2="1024" y2="1024" gradientUnits="userSpaceOnUse">
+      <stop offset="0%" stop-color="#1A9BFF"/>
+      <stop offset="50%" stop-color="#0A84FF"/>
+      <stop offset="100%" stop-color="#0055D4"/>
+    </linearGradient>
+
+    <!-- Document surface gradient — warm white -->
+    <linearGradient id="docGrad" x1="280" y1="120" x2="740" y2="900" gradientUnits="userSpaceOnUse">
+      <stop offset="0%" stop-color="#FFFFFF"/>
+      <stop offset="100%" stop-color="#F0F3F8"/>
+    </linearGradient>
+
+    <!-- Fold triangle gradient -->
+    <linearGradient id="foldGrad" x1="636" y1="148" x2="744" y2="256" gradientUnits="userSpaceOnUse">
+      <stop offset="0%" stop-color="#D8E2EE"/>
+      <stop offset="100%" stop-color="#C0CCE0"/>
+    </linearGradient>
+
+    <!-- Badge gradient — vibrant green -->
+    <linearGradient id="badgeGrad" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#3DDC65"/>
+      <stop offset="100%" stop-color="#28B94A"/>
+    </linearGradient>
+
+    <!-- Document drop shadow -->
+    <filter id="docShadow" x="-8%" y="-4%" width="120%" height="116%">
+      <feDropShadow dx="0" dy="14" stdDeviation="28" flood-color="#002B6B" flood-opacity="0.35"/>
+    </filter>
+
+    <!-- Badge drop shadow -->
+    <filter id="badgeShadow" x="-25%" y="-20%" width="150%" height="150%">
+      <feDropShadow dx="0" dy="6" stdDeviation="10" flood-color="#004A10" flood-opacity="0.3"/>
+    </filter>
+  </defs>
+
+  <!-- ===== Background ===== -->
+  <rect width="1024" height="1024" rx="228" fill="url(#bgGrad)"/>
+
+  <!-- Subtle top highlight for depth -->
+  <ellipse cx="512" cy="80" rx="440" ry="180" fill="white" opacity="0.06"/>
+
+  <!-- ===== Document Page ===== -->
+  <g filter="url(#docShadow)">
+    <!-- Page body with rounded bottom corners -->
+    <path d="
+      M 300 148
+      L 632 148
+      L 744 260
+      L 744 872
+      Q 744 892 724 892
+      L 320 892
+      Q 300 892 300 872
+      Z
+    " fill="url(#docGrad)"/>
+
+    <!-- Folded corner -->
+    <path d="M 632 148 L 632 260 L 744 260 Z" fill="url(#foldGrad)"/>
+  </g>
+
+  <!-- ===== Content lines — grouped by paragraph ===== -->
+  <!-- Paragraph 1 -->
+  <rect x="374" y="340" width="296" height="14" rx="7" fill="#0A6DD8" opacity="0.13"/>
+  <rect x="374" y="374" width="232" height="14" rx="7" fill="#0A6DD8" opacity="0.10"/>
+  <rect x="374" y="408" width="268" height="14" rx="7" fill="#0A6DD8" opacity="0.07"/>
+
+  <!-- Paragraph 2 -->
+  <rect x="374" y="466" width="296" height="14" rx="7" fill="#0A6DD8" opacity="0.13"/>
+  <rect x="374" y="500" width="210" height="14" rx="7" fill="#0A6DD8" opacity="0.10"/>
+  <rect x="374" y="534" width="254" height="14" rx="7" fill="#0A6DD8" opacity="0.07"/>
+
+  <!-- Paragraph 3 -->
+  <rect x="374" y="592" width="296" height="14" rx="7" fill="#0A6DD8" opacity="0.13"/>
+  <rect x="374" y="626" width="248" height="14" rx="7" fill="#0A6DD8" opacity="0.10"/>
+  <rect x="374" y="660" width="220" height="14" rx="7" fill="#0A6DD8" opacity="0.07"/>
+
+  <!-- Paragraph 4 (short) -->
+  <rect x="374" y="718" width="296" height="14" rx="7" fill="#0A6DD8" opacity="0.13"/>
+  <rect x="374" y="752" width="180" height="14" rx="7" fill="#0A6DD8" opacity="0.10"/>
+
+  <!-- ===== Privacy Shield Badge ===== -->
+  <g filter="url(#badgeShadow)" transform="translate(636, 708)">
+    <!-- Circle background -->
+    <circle cx="76" cy="76" r="76" fill="url(#badgeGrad)"/>
+
+    <!-- Inner ring for polish -->
+    <circle cx="76" cy="76" r="66" fill="none" stroke="white" stroke-width="2" opacity="0.25"/>
+
+    <!-- Lock body -->
+    <rect x="50" y="70" width="52" height="40" rx="8" fill="white"/>
+
+    <!-- Lock shackle -->
+    <path d="M 60 70 V 54 C 60 38 92 38 92 54 V 70"
+          fill="none" stroke="white" stroke-width="8" stroke-linecap="round"/>
+
+    <!-- Keyhole -->
+    <circle cx="76" cy="86" r="6" fill="#28B94A"/>
+    <rect x="73.5" y="86" width="5" height="10" rx="2.5" fill="#28B94A"/>
+  </g>
+</svg>

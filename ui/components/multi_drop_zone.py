@@ -41,7 +41,7 @@ class MultiDropZone(QWidget):
         self._layout = QVBoxLayout(self)
         self._layout.setAlignment(Qt.AlignmentFlag.AlignCenter)
 
-        self._icon_label = QLabel("PDF")
+        self._icon_label = QLabel("\U0001F4C2")
         self._icon_label.setObjectName("dropIcon")
         self._icon_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
         self._layout.addWidget(self._icon_label)
@@ -113,13 +113,13 @@ class MultiDropZone(QWidget):
 
         if self._drag_over:
             pen = QPen(QColor("#007AFF"), 2, Qt.PenStyle.CustomDashLine)
-        elif self._file_count > 0:
-            pen = QPen(QColor("#a5d6a7"), 2, Qt.PenStyle.SolidLine)
-        else:
-            pen = QPen(QColor("#cccccc"), 2, Qt.PenStyle.CustomDashLine)
-
-        if self._file_count == 0 or self._drag_over:
             pen.setDashPattern([8, 4])
+        elif self._file_count > 0:
+            pen = QPen(QColor("#34C759"), 2, Qt.PenStyle.SolidLine)
+        else:
+            pen = QPen(QColor("#E5E5EA"), 2, Qt.PenStyle.CustomDashLine)
+            pen.setDashPattern([8, 6])
+
         painter.setPen(pen)
-        painter.drawRoundedRect(self.rect().adjusted(1, 1, -1, -1), 12, 12)
+        painter.drawRoundedRect(self.rect().adjusted(1, 1, -1, -1), 16, 16)
         painter.end()

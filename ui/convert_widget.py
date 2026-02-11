@@ -102,7 +102,7 @@ class ConvertWidget(QWidget):
         self._cover_btn.clicked.connect(self._select_cover_image)
         cover_row.addWidget(self._cover_btn)
         self._cover_path_label = QLabel("No image selected")
-        self._cover_path_label.setStyleSheet("color: #888; font-size: 12px;")
+        self._cover_path_label.setProperty("class", "textCaption")
         cover_row.addWidget(self._cover_path_label, 1)
         branded_layout.addLayout(cover_row)
 
@@ -128,6 +128,14 @@ class ConvertWidget(QWidget):
         self._lo_status.setStyleSheet("font-size: 12px; padding-top: 8px;")
         layout.addWidget(self._lo_status)
 
+        # Install LibreOffice button (shown when LO is missing)
+        self._install_lo_btn = QPushButton("Install LibreOffice")
+        self._install_lo_btn.setObjectName("primaryButton")
+        self._install_lo_btn.setToolTip("Download and install LibreOffice automatically")
+        self._install_lo_btn.clicked.connect(self._on_install_libreoffice)
+        self._install_lo_btn.hide()
+        layout.addWidget(self._install_lo_btn)
+
         layout.addStretch()
 
         scroll.setWidget(container)
@@ -150,11 +158,13 @@ class ConvertWidget(QWidget):
             version = lo.version.split('\n')[0] if lo.version else ""
             self._lo_status.setText(f"LibreOffice detected: {version}")
             self._lo_status.setProperty("class", "statusGreen")
+            self._install_lo_btn.hide()
         else:
             self._lo_status.setText("LibreOffice not found — required for PPT conversion")
             self._lo_status.setProperty("class", "statusRed")
             self._convert_btn.setEnabled(False)
             self._convert_btn.setToolTip("Install LibreOffice to enable PPT conversion")
+            self._install_lo_btn.show()
 
     def _on_mode_changed(self):
         if self._branded_radio.isChecked():
@@ -239,10 +249,14 @@ class ConvertWidget(QWidget):
         self._worker = None
 
         if hasattr(result, 'libreoffice_missing') and result.libreoffice_missing:
-            QMessageBox.warning(
+            reply = QMessageBox.question(
                 self, "LibreOffice Required",
-                f"LibreOffice is needed for PPT conversion.\n\n{result.install_instructions}",
+                "LibreOffice is needed for PPT conversion.\n\n"
+                "Would you like to download and install it now? (~300 MB)",
+                QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No,
             )
+            if reply == QMessageBox.StandardButton.Yes:
+                self._on_install_libreoffice()
             self._progress.reset()
             return
 
@@ -276,6 +290,18 @@ class ConvertWidget(QWidget):
         self._progress.reset()
         self._current_file = ""
         self._convert_btn.setEnabled(False)
+
+    def _on_install_libreoffice(self):
+        from ui.libreoffice_install_dialog import LibreOfficeInstallDialog
+        dialog = LibreOfficeInstallDialog(self)
+        dialog.install_completed.connect(self._on_libreoffice_installed)
+        dialog.exec()
+
+    def _on_libreoffice_installed(self, soffice_path: str):
+        self._check_libreoffice()
+        if self._current_file:
+            lo = detect_libreoffice()
+            self._convert_btn.setEnabled(lo.found)
 
     def cleanup(self):
         if self._worker and self._worker.isRunning():

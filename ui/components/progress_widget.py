@@ -31,7 +31,7 @@ class ProgressWidget(QWidget):
         bar_row.addWidget(self._bar, 1)
 
         self._pct_label = QLabel("0%")
-        self._pct_label.setStyleSheet("font-weight: bold; font-size: 13px; min-width: 40px;")
+        self._pct_label.setProperty("class", "progressPct")
         bar_row.addWidget(self._pct_label)
 
         layout.addLayout(bar_row)
@@ -40,7 +40,7 @@ class ProgressWidget(QWidget):
         status_row = QHBoxLayout()
 
         self._status_label = QLabel("Preparing...")
-        self._status_label.setStyleSheet("color: #888; font-size: 12px;")
+        self._status_label.setProperty("class", "textCaption")
         status_row.addWidget(self._status_label, 1)
 
         self._cancel_btn = QPushButton("Cancel")

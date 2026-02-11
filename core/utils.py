@@ -187,6 +187,7 @@ def detect_libreoffice() -> LibreOfficeInfo:
     if plat == "macos":
         search_paths = [
             "/Applications/LibreOffice.app/Contents/MacOS/soffice",
+            os.path.expanduser("~/Applications/LibreOffice.app/Contents/MacOS/soffice"),
             "/opt/homebrew/bin/soffice",
             "soffice",
         ]
@@ -272,6 +273,122 @@ def validate_image(file_path: str) -> ValidationResult:
         return ValidationResult(False, f"Cannot open image: {e}")
 
     return ValidationResult(valid=True, file_size_bytes=file_size)
+
+
+@dataclass
+class TesseractInfo:
+    found: bool
+    path: str = ""
+    version: str = ""
+    languages: list = None
+    install_instructions: str = ""
+
+    def __post_init__(self):
+        if self.languages is None:
+            self.languages = []
+
+
+def detect_tesseract() -> TesseractInfo:
+    """Detect Tesseract OCR installation on the system."""
+    plat = get_platform()
+
+    search_paths = []
+    if plat == "macos":
+        search_paths = [
+            "/opt/homebrew/bin/tesseract",
+            "/usr/local/bin/tesseract",
+            "tesseract",
+        ]
+    elif plat == "windows":
+        search_paths = [
+            r"C:\Program Files\Tesseract-OCR\tesseract.exe",
+            r"C:\Program Files (x86)\Tesseract-OCR\tesseract.exe",
+            "tesseract",
+        ]
+    else:
+        search_paths = [
+            "/usr/bin/tesseract",
+            "/usr/local/bin/tesseract",
+            "tesseract",
+        ]
+
+    for path in search_paths:
+        resolved = shutil.which(path) if not os.path.isabs(path) else path
+        if resolved and os.path.isfile(resolved):
+            version = ""
+            languages = []
+            try:
+                result = subprocess.run(
+                    [resolved, "--version"],
+                    capture_output=True, text=True, timeout=10,
+                )
+                version = result.stdout.strip().split("\n")[0]
+            except Exception:
+                pass
+            try:
+                result = subprocess.run(
+                    [resolved, "--list-langs"],
+                    capture_output=True, text=True, timeout=10,
+                )
+                lines = result.stdout.strip().split("\n")
+                # First line is header, rest are languages
+                languages = [l.strip() for l in lines[1:] if l.strip() and l.strip() != "osd"]
+            except Exception:
+                languages = ["eng"]
+            return TesseractInfo(
+                found=True, path=resolved, version=version, languages=languages,
+            )
+
+    return TesseractInfo(
+        found=False,
+        install_instructions=get_tesseract_install_instructions(),
+    )
+
+
+def get_tesseract_install_instructions() -> str:
+    """Return platform-specific Tesseract install instructions."""
+    plat = get_platform()
+    if plat == "macos":
+        return (
+            "Tesseract OCR is needed for text recognition.\n\n"
+            "Install with Homebrew:\nbrew install tesseract\n\n"
+            "For additional languages:\nbrew install tesseract-lang"
+        )
+    if plat == "windows":
+        return (
+            "Tesseract OCR is needed for text recognition.\n\n"
+            "Download the installer from:\n"
+            "https://github.com/UB-Mannheim/tesseract/wiki\n\n"
+            "Run the installer and restart LocalPDF."
+        )
+    return (
+        "Tesseract OCR is needed for text recognition.\n\n"
+        "Install via your package manager:\nsudo apt install tesseract-ocr\n\n"
+        "For additional languages:\nsudo apt install tesseract-ocr-all"
+    )
+
+
+def validate_image_or_pdf(file_path: str) -> ValidationResult:
+    """Validate a file as either a PDF or an image (for OCR input)."""
+    if not file_path:
+        return ValidationResult(False, "No file selected.")
+
+    if not os.path.exists(file_path):
+        return ValidationResult(False, f"File not found: {os.path.basename(file_path)}")
+
+    ext = Path(file_path).suffix.lower()
+
+    if ext == ".pdf":
+        return validate_pdf(file_path)
+
+    valid_image_exts = {".jpg", ".jpeg", ".png", ".bmp", ".tiff", ".tif", ".webp"}
+    if ext in valid_image_exts:
+        return validate_image(file_path)
+
+    return ValidationResult(
+        False,
+        f"Unsupported file format: '{ext}'. Expected PDF or image (JPG, PNG, BMP, TIFF, WebP).",
+    )
 
 
 def get_asset_path(relative_path: str) -> str:

@@ -57,8 +57,13 @@ hiddenimports = [
     'core.splitter',
     'core.converter',
     'core.image_to_pdf',
+    'core.pdf_to_image',
+    'core.protector',
+    'core.watermark',
+    'core.ocr',
     'core.branded_pdf',
     'core.utils',
+    'core.libreoffice_installer',
 
     # UI modules
     'ui',
@@ -67,13 +72,28 @@ hiddenimports = [
     'ui.batch_compress_widget',
     'ui.merge_widget',
     'ui.split_widget',
+    'ui.protect_widget',
+    'ui.watermark_widget',
     'ui.image_to_pdf_widget',
+    'ui.pdf_to_image_widget',
     'ui.convert_widget',
+    'ui.ocr_widget',
     'ui.settings_widget',
     'ui.theme',
 
     # Workers
     'workers',
+    'workers.compress_worker',
+    'workers.batch_compress_worker',
+    'workers.merge_worker',
+    'workers.split_worker',
+    'workers.pdf_to_image_worker',
+    'workers.protect_worker',
+    'workers.watermark_worker',
+    'workers.image_to_pdf_worker',
+    'workers.convert_worker',
+    'workers.ocr_worker',
+    'workers.libreoffice_install_worker',
 
     # PDF libraries
     'fitz',  # PyMuPDF
@@ -82,6 +102,9 @@ hiddenimports = [
     'reportlab',
     'reportlab.lib',
     'reportlab.pdfgen',
+
+    # OCR
+    'pytesseract',
 ]
 
 # Exclude unnecessary modules

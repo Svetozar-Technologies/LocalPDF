@@ -38,16 +38,15 @@ class ResultCard(QWidget):
         size_row.addWidget(self._before_label)
 
         arrow = QLabel("  ->  ")
-        arrow.setStyleSheet("font-size: 16px; font-weight: bold;")
+        arrow.setProperty("class", "resultArrow")
         size_row.addWidget(arrow)
 
         self._after_label = QLabel()
         self._after_label.setProperty("class", "resultValue")
-        self._after_label.setStyleSheet("font-weight: bold;")
         size_row.addWidget(self._after_label)
 
         self._reduction_label = QLabel()
-        self._reduction_label.setStyleSheet("color: #2e7d32; font-weight: bold; font-size: 13px;")
+        self._reduction_label.setProperty("class", "resultReduction")
         size_row.addWidget(self._reduction_label)
 
         size_row.addStretch()

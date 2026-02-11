@@ -30,7 +30,7 @@ class FileSizeInput(QWidget):
 
         # Label
         label = QLabel("Target Size")
-        label.setStyleSheet("font-weight: bold; font-size: 14px; color: #555;")
+        label.setStyleSheet("font-weight: bold; font-size: 14px;")
         layout.addWidget(label)
 
         # Input row
