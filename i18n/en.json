@@ -8,7 +8,7 @@
 
   "app.title": "LocalPDF",
   "app.subtitle": "100% Local Processing",
-  "app.version": "v1.1.0",
+  "app.version": "v1.2.0",
 
   "sidebar.pdf_tools": "PDF TOOLS",
   "sidebar.compress": "\ud83d\udce6  Compress PDF",

@@ -202,8 +202,8 @@ if sys.platform == 'darwin':
         info_plist={
             'CFBundleName': 'LocalPDF',
             'CFBundleDisplayName': 'LocalPDF',
-            'CFBundleVersion': '1.1.0',
-            'CFBundleShortVersionString': '1.1.0',
+            'CFBundleVersion': '1.2.0',
+            'CFBundleShortVersionString': '1.2.0',
             'CFBundleExecutable': 'LocalPDF',
             'CFBundleIdentifier': 'ai.localpdf.desktop',
             'NSHighResolutionCapable': True,

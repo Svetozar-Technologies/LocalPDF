@@ -8,7 +8,7 @@
 
   "app.title": "LocalPDF",
   "app.subtitle": "Procesamiento 100% local",
-  "app.version": "v1.1.0",
+  "app.version": "v1.2.0",
 
   "sidebar.pdf_tools": "HERRAMIENTAS PDF",
   "sidebar.compress": "📦  Comprimir PDF",
