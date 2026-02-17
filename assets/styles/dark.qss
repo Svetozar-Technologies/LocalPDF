@@ -631,3 +631,41 @@ QMessageBox QLabel {
     color: #FFFFFF;
     font-size: 13px;
 }
+
+/* === Edit View Page Card === */
+QFrame[class="editPageCard"] {
+    background-color: #2C2C2E;
+    border: 1px solid #48484A;
+    border-radius: 4px;
+    padding: 8px;
+}
+
+/* === Signature Canvas === */
+QWidget[class="signatureCanvas"] {
+    background-color: #2C2C2E;
+    border: 2px solid #48484A;
+    border-radius: 8px;
+}
+
+/* === Tab Widget (Signature Dialog) === */
+QTabWidget::pane {
+    border: 1px solid #48484A;
+    border-radius: 8px;
+    background-color: #2C2C2E;
+}
+
+QTabBar::tab {
+    background-color: #3A3A3C;
+    border: none;
+    padding: 8px 20px;
+    font-size: 13px;
+    color: #EBEBF5;
+    border-top-left-radius: 8px;
+    border-top-right-radius: 8px;
+}
+
+QTabBar::tab:selected {
+    background-color: #2C2C2E;
+    color: #0A84FF;
+    font-weight: 600;
+}

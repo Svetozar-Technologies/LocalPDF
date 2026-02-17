@@ -16,7 +16,7 @@ from ui.watermark_widget import WatermarkWidget
 from ui.image_to_pdf_widget import ImageToPdfWidget
 from ui.pdf_to_image_widget import PDFToImageWidget
 from ui.convert_widget import ConvertWidget
-from ui.ocr_widget import OCRWidget
+from ui.page_manager_widget import PageManagerWidget
 from ui.settings_widget import SettingsWidget
 from ui.theme import ThemeManager
 
@@ -61,7 +61,7 @@ class MainWindow(QMainWindow):
         self._image_to_pdf_widget = ImageToPdfWidget()
         self._pdf_to_image_widget = PDFToImageWidget()
         self._convert_widget = ConvertWidget()
-        self._ocr_widget = OCRWidget()
+        self._page_manager_widget = PageManagerWidget()
         self._settings_widget = SettingsWidget(theme_manager=self._theme_manager)
 
         self._stack.addWidget(self._compress_widget)        # 0
@@ -73,7 +73,7 @@ class MainWindow(QMainWindow):
         self._stack.addWidget(self._image_to_pdf_widget)     # 6
         self._stack.addWidget(self._pdf_to_image_widget)     # 7
         self._stack.addWidget(self._convert_widget)          # 8
-        self._stack.addWidget(self._ocr_widget)              # 9
+        self._stack.addWidget(self._page_manager_widget)     # 9
         self._stack.addWidget(self._settings_widget)         # 10
 
         main_layout.addWidget(self._stack, 1)
@@ -141,16 +141,16 @@ class MainWindow(QMainWindow):
             layout.addWidget(btn)
             self._nav_buttons.append(btn)
 
-        # --- AI Tools section ---
-        section3 = QLabel("  AI TOOLS")
+        # --- Page Tools section ---
+        section3 = QLabel("  PAGE TOOLS")
         section3.setObjectName("sidebarSection")
         layout.addWidget(section3)
 
-        ai_tools = [
-            ("\U0001F50D  OCR (Scan to Text)", 9),
+        page_tools = [
+            ("\U0001F4C4  PDF Page Editor", 9),
         ]
 
-        for label, index in ai_tools:
+        for label, index in page_tools:
             btn = QPushButton(label)
             btn.setProperty("class", "navButton")
             btn.setFixedHeight(38)
@@ -214,7 +214,7 @@ class MainWindow(QMainWindow):
             ("Image to PDF", "Ctrl+7", 6),
             ("PDF to Image", "Ctrl+8", 7),
             ("Convert PPT", "Ctrl+9", 8),
-            ("OCR", "Ctrl+0", 9),
+            ("PDF Page Editor", "Ctrl+0", 9),
             ("Settings", "Ctrl+,", 10),
         ]
 
@@ -234,7 +234,7 @@ class MainWindow(QMainWindow):
             self._merge_widget, self._split_widget,
             self._protect_widget, self._watermark_widget,
             self._image_to_pdf_widget, self._pdf_to_image_widget,
-            self._convert_widget, self._ocr_widget,
+            self._convert_widget, self._page_manager_widget,
         ]
         for w in widgets:
             w.cleanup()

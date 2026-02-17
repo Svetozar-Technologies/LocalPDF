@@ -6,7 +6,7 @@ from PyQt6.QtWidgets import (
 )
 from PyQt6.QtCore import Qt, QSettings
 
-from core.utils import detect_libreoffice, get_libreoffice_install_instructions, detect_tesseract, get_tesseract_install_instructions
+from core.utils import detect_libreoffice, get_libreoffice_install_instructions
 
 
 class SettingsWidget(QWidget):
@@ -92,30 +92,14 @@ class SettingsWidget(QWidget):
 
         layout.addWidget(lo_group)
 
-        # Tesseract OCR
-        tess_group = QGroupBox("Tesseract OCR (for text recognition)")
-        tess_layout = QVBoxLayout(tess_group)
-
-        self._tess_label = QLabel("Checking...")
-        self._tess_label.setWordWrap(True)
-        tess_layout.addWidget(self._tess_label)
-
-        self._tess_install_btn = QPushButton("View Install Instructions")
-        self._tess_install_btn.setProperty("class", "secondaryButton")
-        self._tess_install_btn.clicked.connect(self._show_tess_instructions)
-        self._tess_install_btn.hide()
-        tess_layout.addWidget(self._tess_install_btn)
-
-        layout.addWidget(tess_group)
-
         # About
         about_group = QGroupBox("About")
         about_layout = QVBoxLayout(about_group)
         about_text = QLabel(
             "LocalPDF v1.0\n\n"
             "Complete PDF toolkit — compress, merge, split, protect, watermark,\n"
-            "convert, and OCR. 100% local processing.\n\n"
-            "Built with Python, PyQt6, PyMuPDF, and Tesseract OCR."
+            "convert, and manage pages. 100% local processing.\n\n"
+            "Built with Python, PyQt6, PyMuPDF, and ReportLab."
         )
         about_text.setWordWrap(True)
         about_text.setProperty("class", "textSecondary")
@@ -132,7 +116,6 @@ class SettingsWidget(QWidget):
 
         # Refresh status
         self._refresh_lo_status()
-        self._refresh_tess_status()
         self._update_theme_button()
 
     def _toggle_theme(self):
@@ -183,22 +166,3 @@ class SettingsWidget(QWidget):
         instructions = get_libreoffice_install_instructions()
         QMessageBox.information(self, "Install LibreOffice", instructions)
 
-    def _refresh_tess_status(self):
-        tess = detect_tesseract()
-        if tess.found:
-            version = tess.version or "unknown version"
-            langs = ", ".join(tess.languages[:5])
-            if len(tess.languages) > 5:
-                langs += f" (+{len(tess.languages) - 5} more)"
-            self._tess_label.setText(f"Installed: {version}\nPath: {tess.path}\nLanguages: {langs}")
-            self._tess_label.setProperty("class", "statusGreen")
-            self._tess_install_btn.hide()
-        else:
-            self._tess_label.setText("Not installed. Required for OCR text recognition.")
-            self._tess_label.setProperty("class", "statusRed")
-            self._tess_install_btn.show()
-
-    def _show_tess_instructions(self):
-        from PyQt6.QtWidgets import QMessageBox
-        instructions = get_tesseract_install_instructions()
-        QMessageBox.information(self, "Install Tesseract OCR", instructions)
