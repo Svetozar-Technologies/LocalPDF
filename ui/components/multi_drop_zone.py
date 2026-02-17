@@ -10,6 +10,8 @@ from PyQt6.QtWidgets import (
 from PyQt6.QtCore import Qt, pyqtSignal
 from PyQt6.QtGui import QDragEnterEvent, QDropEvent, QPainter, QPen, QColor
 
+from i18n import t
+
 
 class MultiDropZone(QWidget):
     """
@@ -55,9 +57,7 @@ class MultiDropZone(QWidget):
         """Update visual to show how many files are loaded."""
         self._file_count = count
         if count > 0:
-            self._text_label.setText(
-                f"{count} file{'s' if count != 1 else ''} loaded — drop more or click to add"
-            )
+            self._text_label.setText(t("drop_zone.files_loaded", count=count))
         else:
             self._text_label.setText(self._placeholder_text)
         self.update()
@@ -98,7 +98,7 @@ class MultiDropZone(QWidget):
     def _browse_files(self):
         exts = " ".join(f"*{e}" for e in self._accepted_extensions)
         file_filter = f"Supported Files ({exts})"
-        paths, _ = QFileDialog.getOpenFileNames(self, "Select Files", "", file_filter)
+        paths, _ = QFileDialog.getOpenFileNames(self, t("common.select_files"), "", file_filter)
         if paths:
             self.files_selected.emit(paths)
 

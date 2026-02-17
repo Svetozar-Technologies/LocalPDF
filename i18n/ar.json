@@ -1,0 +1,425 @@
+{
+  "_meta": {
+    "language": "Arabic",
+    "native_name": "العربية",
+    "code": "ar",
+    "direction": "rtl"
+  },
+
+  "app.title": "LocalPDF",
+  "app.subtitle": "معالجة محلية 100%",
+  "app.version": "v1.1.0",
+
+  "sidebar.pdf_tools": "أدوات PDF",
+  "sidebar.compress": "📦  ضغط PDF",
+  "sidebar.batch_compress": "📚  ضغط دفعي",
+  "sidebar.merge": "🔗  دمج PDF",
+  "sidebar.split": "✂  تقسيم PDF",
+  "sidebar.protect": "🔒  حماية / إلغاء القفل",
+  "sidebar.watermark": "💧  علامة مائية",
+  "sidebar.convert": "تحويل",
+  "sidebar.image_to_pdf": "🖼  صورة إلى PDF",
+  "sidebar.pdf_to_image": "📷  PDF إلى صورة",
+  "sidebar.convert_ppt": "📊  تحويل PPT",
+  "sidebar.page_tools": "أدوات الصفحات",
+  "sidebar.page_editor": "📄  محرر صفحات PDF",
+  "sidebar.settings": "⚙️  الإعدادات",
+
+  "menu.file": "ملف",
+  "menu.quit": "إنهاء",
+  "menu.view": "عرض",
+  "menu.toggle_dark_mode": "تبديل الوضع الداكن",
+  "menu.navigate": "تنقل",
+
+  "common.error": "خطأ",
+  "common.cancel": "إلغاء",
+  "common.close": "إغلاق",
+  "common.browse": "استعراض",
+  "common.reset": "إعادة تعيين",
+  "common.delete": "حذف",
+  "common.remove": "إزالة",
+  "common.select_all": "تحديد الكل",
+  "common.invalid_file": "ملف غير صالح",
+  "common.disk_space": "مساحة القرص",
+  "common.some_files_skipped": "تم تخطي بعض الملفات",
+  "common.files_skipped_msg": "تم تخطي الملفات التالية:\n\n{errors}",
+  "common.select_file": "اختيار ملف",
+  "common.select_files": "اختيار ملفات",
+
+  "drop_zone.single_placeholder": "أسقط الملف هنا أو انقر للاستعراض",
+  "drop_zone.multi_placeholder": "أسقط الملفات هنا أو انقر للاستعراض",
+  "drop_zone.files_loaded": "تم تحميل {count} ملف(ات) — أسقط المزيد أو انقر للإضافة",
+
+  "progress.preparing": "جارٍ التحضير...",
+  "progress.starting": "جارٍ البدء...",
+
+  "result.complete": "اكتمل الضغط!",
+  "result.done": "تم!",
+  "result.before": "قبل: {size}",
+  "result.after": "بعد: {size}",
+  "result.saved": "تم الحفظ: {filename}",
+  "result.smaller": "({percent:.0f}% أصغر)",
+  "result.open_file": "فتح الملف",
+  "result.open_folder": "فتح المجلد",
+  "result.process_another": "معالجة ملف آخر",
+
+  "file_size.target_size": "الحجم المستهدف",
+  "file_size.email": "بريد إلكتروني (2 MB)",
+  "file_size.web": "ويب (5 MB)",
+  "file_size.print": "طباعة (10 MB)",
+
+  "file_list.no_files": "لم تتم إضافة ملفات بعد",
+  "file_list.move_up": "نقل لأعلى",
+  "file_list.move_down": "نقل لأسفل",
+  "file_list.pending": "قيد الانتظار",
+  "file_list.processing": "جارٍ المعالجة...",
+  "file_list.done": "تم",
+
+  "compress.title": "ضغط PDF",
+  "compress.subtitle": "تقليل حجم الملف مع الحفاظ على الجودة. معالجة محلية 100% — ملفاتك لا تغادر هذا الجهاز أبدًا.",
+  "compress.drop_text": "أسقط ملف PDF هنا أو انقر للاستعراض",
+  "compress.button": "ضغط PDF",
+  "compress.already_small_title": "الملف صغير بالفعل",
+  "compress.already_small_msg": "هذا الملف ({current_size}) أصغر بالفعل من الحجم المستهدف ({target_size}).",
+  "compress.already_small_short": "الملف أصغر بالفعل من الحجم المستهدف.",
+  "compress.text_only_title": "PDF نصي فقط",
+  "compress.text_only_msg": "ملف PDF هذا لا يحتوي على صور. تم تطبيق التحسين بدون فقدان فقط.\nلا يمكن ضغط ملفات PDF النصية أكثر من ذلك.",
+  "compress.lossless_title": "تم تطبيق التحسين بدون فقدان",
+  "compress.target_too_small_title": "الحجم المستهدف صغير جدًا",
+  "compress.target_too_small_msg": "لا يمكن الضغط إلى الحجم المستهدف.\n\nأقل حجم يمكن تحقيقه هو {min_size} MB.\nحاول تعيين حجم مستهدف أكبر.",
+  "compress.failed": "فشل الضغط.",
+
+  "batch_compress.title": "ضغط دفعي",
+  "batch_compress.subtitle": "ضغط عدة ملفات PDF دفعة واحدة إلى حجم مستهدف. معالجة محلية 100%.",
+  "batch_compress.drop_text": "أسقط ملفات PDF هنا أو انقر للاستعراض",
+  "batch_compress.button": "ضغط الكل",
+  "batch_compress.complete": "اكتملت الدفعة: تم حفظ {succeeded}/{total} ملفات في compressed/",
+  "batch_compress.complete_mixed": "اكتملت الدفعة: نجح {succeeded}، فشل {failed}",
+
+  "merge.title": "دمج PDF",
+  "merge.subtitle": "دمج عدة ملفات PDF في مستند واحد. اسحب لإعادة الترتيب.",
+  "merge.drop_text": "أسقط ملفات PDF هنا أو انقر للاستعراض",
+  "merge.button": "دمج PDF",
+  "merge.complete": "تم الدمج! {pages} صفحة، {size}",
+  "merge.failed": "فشل الدمج.",
+
+  "split.title": "تقسيم / استخراج الصفحات",
+  "split.subtitle": "استخراج صفحات محددة من ملف PDF أو تقسيمه إلى ملفات صفحات فردية.",
+  "split.drop_text": "أسقط ملف PDF هنا أو انقر للاستعراض",
+  "split.page_selection": "تحديد الصفحات",
+  "split.range_placeholder": "مثال: 1-5, 3, 7-10",
+  "split.range_helper": "أدخل أرقام الصفحات مفصولة بفواصل. استخدم الشرطات للنطاقات.",
+  "split.split_individual": "تقسيم إلى صفحات فردية (ملف PDF واحد لكل صفحة)",
+  "split.button": "استخراج الصفحات",
+  "split.invalid_range": "نطاق صفحات غير صالح",
+  "split.extracted": "تم استخراج {pages} صفحة ({size})",
+  "split.created_files": "تم إنشاء {count} ملفات ({size} إجمالي)",
+  "split.failed": "فشل التقسيم.",
+  "split.pages_info": "{count} صفحة",
+
+  "protect.title": "حماية / إلغاء قفل PDF",
+  "protect.subtitle": "إضافة حماية بكلمة مرور أو إزالة كلمات المرور من ملفات PDF. معالجة محلية 100% — كلمات مرورك لا تغادر هذا الجهاز أبدًا.",
+  "protect.drop_text": "أسقط ملف PDF هنا أو انقر للاستعراض",
+  "protect.mode": "الوضع",
+  "protect.mode_protect": "حماية — إضافة كلمة مرور إلى PDF",
+  "protect.mode_unlock": "إلغاء القفل — إزالة كلمة المرور من PDF",
+  "protect.settings": "إعدادات الحماية",
+  "protect.open_password": "كلمة مرور الفتح:",
+  "protect.open_password_hint": "كلمة مرور مطلوبة لفتح ملف PDF",
+  "protect.owner_password": "كلمة مرور المالك:",
+  "protect.owner_password_hint": "(اختياري) كلمة مرور لصلاحيات التعديل",
+  "protect.permissions": "الصلاحيات (عند تعيين كلمة مرور المالك):",
+  "protect.allow_print": "السماح بالطباعة",
+  "protect.allow_copy": "السماح بنسخ النص",
+  "protect.allow_modify": "السماح بالتعديل",
+  "protect.allow_annotate": "السماح بالتعليقات التوضيحية",
+  "protect.unlock_settings": "إعدادات إلغاء القفل",
+  "protect.password_label": "كلمة المرور:",
+  "protect.password_hint": "أدخل كلمة مرور PDF",
+  "protect.button_protect": "حماية PDF",
+  "protect.button_unlock": "إلغاء قفل PDF",
+  "protect.no_password": "لا توجد كلمة مرور",
+  "protect.no_password_msg": "يرجى إدخال كلمة مرور واحدة على الأقل (فتح أو مالك).",
+  "protect.no_unlock_password": "يرجى إدخال كلمة مرور PDF.",
+  "protect.file_not_found": "الملف غير موجود.",
+  "protect.select_pdf": "يرجى اختيار ملف PDF.",
+  "protect.protected_result": "تمت الحماية! {pages} صفحة",
+  "protect.unlocked_result": "تم إلغاء القفل! {pages} صفحة",
+  "protect.failed": "فشلت العملية.",
+
+  "watermark.title": "إضافة علامة مائية",
+  "watermark.subtitle": "إضافة علامات مائية نصية أو مصورة إلى ملف PDF. معالجة محلية 100%.",
+  "watermark.drop_text": "أسقط ملف PDF هنا أو انقر للاستعراض",
+  "watermark.type_group": "نوع العلامة المائية",
+  "watermark.type_text": "علامة مائية نصية",
+  "watermark.type_image": "علامة مائية مصورة (شعار)",
+  "watermark.text_settings": "إعدادات العلامة المائية النصية",
+  "watermark.text_label": "النص:",
+  "watermark.text_default": "سري",
+  "watermark.text_placeholder": "نص العلامة المائية",
+  "watermark.font_size": "حجم الخط:",
+  "watermark.rotation": "الدوران:",
+  "watermark.opacity": "الشفافية:",
+  "watermark.color": "اللون:",
+  "watermark.image_settings": "إعدادات العلامة المائية المصورة",
+  "watermark.select_image": "اختيار صورة العلامة المائية",
+  "watermark.no_image": "لم يتم اختيار صورة",
+  "watermark.size_label": "الحجم:",
+  "watermark.position": "الموضع:",
+  "watermark.preview_header": "معاينة (الصفحة 1)",
+  "watermark.preview_placeholder": "اختر ملف PDF وصورة العلامة المائية لعرض المعاينة",
+  "watermark.button": "إضافة علامة مائية",
+  "watermark.no_text_title": "لا يوجد نص",
+  "watermark.no_text_msg": "يرجى إدخال نص العلامة المائية.",
+  "watermark.no_image_title": "لا توجد صورة",
+  "watermark.no_image_msg": "يرجى اختيار صورة للعلامة المائية.",
+  "watermark.complete": "تمت إضافة العلامة المائية! {pages} صفحة",
+  "watermark.failed": "فشلت إضافة العلامة المائية.",
+  "watermark.select_image_dialog": "اختيار صورة العلامة المائية",
+
+  "color.gray": "رمادي",
+  "color.red": "أحمر",
+  "color.blue": "أزرق",
+  "color.green": "أخضر",
+  "color.black": "أسود",
+
+  "position.center": "وسط",
+  "position.top_left": "أعلى اليسار",
+  "position.top_right": "أعلى اليمين",
+  "position.bottom_left": "أسفل اليسار",
+  "position.bottom_right": "أسفل اليمين",
+
+  "image_to_pdf.title": "صورة إلى PDF",
+  "image_to_pdf.subtitle": "تحويل الصور إلى ملف PDF واحد. صورة واحدة لكل صفحة، ملائمة لحجم A4.",
+  "image_to_pdf.drop_text": "أسقط الصور هنا أو انقر للاستعراض",
+  "image_to_pdf.orientation": "اتجاه الصفحة",
+  "image_to_pdf.auto": "تلقائي (حسب الصورة)",
+  "image_to_pdf.portrait": "عمودي",
+  "image_to_pdf.landscape": "أفقي",
+  "image_to_pdf.button": "تحويل إلى PDF",
+  "image_to_pdf.complete": "تم إنشاء PDF بعدد {pages} صفحة ({size})",
+  "image_to_pdf.failed": "فشل التحويل.",
+
+  "pdf_to_image.title": "PDF إلى صورة",
+  "pdf_to_image.subtitle": "تصدير صفحات PDF كصور عالية الجودة. معالجة محلية 100%.",
+  "pdf_to_image.drop_text": "أسقط ملف PDF هنا أو انقر للاستعراض",
+  "pdf_to_image.options": "خيارات التصدير",
+  "pdf_to_image.pages": "الصفحات:",
+  "pdf_to_image.pages_placeholder": "جميع الصفحات (أو مثلاً 1-5, 3, 7-10)",
+  "pdf_to_image.format": "الصيغة:",
+  "pdf_to_image.png": "PNG (بدون فقدان)",
+  "pdf_to_image.jpeg": "JPEG (ملفات أصغر)",
+  "pdf_to_image.resolution": "الدقة:",
+  "pdf_to_image.dpi_72": "72 DPI (شاشة)",
+  "pdf_to_image.dpi_150": "150 DPI (قياسي)",
+  "pdf_to_image.dpi_300": "300 DPI (جودة طباعة)",
+  "pdf_to_image.dpi_600": "600 DPI (جودة عالية)",
+  "pdf_to_image.button": "تصدير كصور",
+  "pdf_to_image.select_folder": "اختيار مجلد الإخراج",
+  "pdf_to_image.complete": "تم تصدير {pages} صفحة كصور",
+  "pdf_to_image.failed": "فشل التصدير.",
+
+  "convert.title": "تحويل PPT إلى PDF",
+  "convert.subtitle": "تحويل عروض PowerPoint إلى PDF. بسيط أو بعلامة تجارية مع صفحة غلاف وعلامة مائية.",
+  "convert.drop_text": "أسقط ملف PPT/PPTX هنا أو انقر للاستعراض",
+  "convert.mode_group": "وضع التحويل",
+  "convert.mode_simple": "بسيط — تحويل مباشر إلى PDF",
+  "convert.mode_branded": "بعلامة تجارية — صفحة غلاف، تخطيط مخصص، علامة مائية",
+  "convert.branded_options": "خيارات PDF بعلامة تجارية",
+  "convert.brand_name": "اسم العلامة التجارية:",
+  "convert.brand_placeholder": "مثال: اسم الشركة (اختياري)",
+  "convert.subject_name": "اسم الموضوع:",
+  "convert.subject_placeholder": "مثال: تشريح، طب، جراحة",
+  "convert.watermark_text": "نص العلامة المائية:",
+  "convert.watermark_placeholder": "مثال: سري، اسم العلامة (اختياري)",
+  "convert.watermark_opacity": "شفافية العلامة المائية:",
+  "convert.page_format": "تنسيق الصفحة:",
+  "convert.portrait_format": "A4 عمودي (شريحتان/صفحة)",
+  "convert.landscape_format": "A4 أفقي (شريحة واحدة/صفحة)",
+  "convert.include_cover": "تضمين صفحة الغلاف",
+  "convert.select_cover": "اختيار صورة الغلاف (اختياري)",
+  "convert.no_image": "لم يتم اختيار صورة",
+  "convert.button": "تحويل إلى PDF",
+  "convert.install_lo": "تثبيت LibreOffice",
+  "convert.install_lo_tooltip": "تنزيل وتثبيت LibreOffice تلقائيًا",
+  "convert.lo_detected": "تم اكتشاف LibreOffice: {version}",
+  "convert.lo_not_found": "لم يتم العثور على LibreOffice — مطلوب لتحويل PPT",
+  "convert.lo_install_hint": "قم بتثبيت LibreOffice لتمكين تحويل PPT",
+  "convert.lo_required_title": "LibreOffice مطلوب",
+  "convert.lo_required_msg": "LibreOffice مطلوب لتحويل PPT.\n\nهل تريد تنزيله وتثبيته الآن؟ (~300 MB)",
+  "convert.complete": "اكتمل التحويل!",
+  "convert.failed": "فشل التحويل.",
+  "convert.select_cover_dialog": "اختيار صورة الغلاف",
+
+  "page_manager.title": "محرر صفحات PDF",
+  "page_manager.subtitle": "تعديل وإعادة ترتيب وتدوير وتعليق ومسح واستخراج صفحات PDF. معالجة محلية 100%.",
+  "page_manager.drop_text": "أسقط ملف PDF هنا أو انقر للاستعراض",
+  "page_manager.rotate_left": "↺ تدوير لليسار",
+  "page_manager.rotate_left_tip": "تدوير الصفحات المحددة 90° عكس عقارب الساعة",
+  "page_manager.rotate_right": "↻ تدوير لليمين",
+  "page_manager.rotate_right_tip": "تدوير الصفحات المحددة 90° مع عقارب الساعة",
+  "page_manager.delete": "✕ حذف",
+  "page_manager.delete_tip": "إزالة الصفحات المحددة",
+  "page_manager.select_all": "تحديد الكل",
+  "page_manager.edit_view": "☰ عرض التحرير",
+  "page_manager.edit_view_tip": "التبديل بين الصور المصغرة الشبكية وعرض التحرير المتواصل",
+  "page_manager.grid_view": "☷ عرض الشبكة",
+  "page_manager.move_left_tip": "نقل الصفحة المحددة لليسار",
+  "page_manager.move_right_tip": "نقل الصفحة المحددة لليمين",
+  "page_manager.insert_pages": "➕ إدراج صفحات",
+  "page_manager.insert_pages_tip": "إدراج صفحات من ملف PDF آخر",
+  "page_manager.insert_blank": "⬜ إدراج صفحة فارغة",
+  "page_manager.insert_blank_tip": "إدراج صفحة A4 فارغة",
+  "page_manager.duplicate": "⎘ تكرار",
+  "page_manager.duplicate_tip": "تكرار الصفحات المحددة",
+  "page_manager.extract": "↗ استخراج",
+  "page_manager.extract_tip": "استخراج الصفحات المحددة إلى ملف PDF جديد",
+  "page_manager.add_text": "𝕠 إضافة نص",
+  "page_manager.add_text_tip": "إضافة تعليق نصي إلى الصفحات المحددة",
+  "page_manager.add_image": "🖼 إضافة صورة",
+  "page_manager.add_image_tip": "إضافة صورة متراكبة إلى الصفحات المحددة",
+  "page_manager.sign": "✍ توقيع",
+  "page_manager.sign_tip": "ارسم أو حمّل توقيعًا وضعه على الصفحات المحددة",
+  "page_manager.annotations": "✎ التعليقات التوضيحية",
+  "page_manager.annotations_tip": "إدارة وحذف التعليقات التوضيحية على الصفحة المحددة",
+  "page_manager.eraser": "✂ الممحاة",
+  "page_manager.eraser_tip": "مسح (تبييض) المحتوى على الصفحة المحددة",
+  "page_manager.save_btn": "حفظ PDF",
+  "page_manager.pages_selected": "{count} صفحة محددة",
+  "page_manager.pages_selected_plural": "{count} صفحات محددة",
+  "page_manager.cannot_delete": "لا يمكن الحذف",
+  "page_manager.cannot_delete_msg": "لا يمكنك حذف جميع الصفحات. يجب أن تبقى صفحة واحدة على الأقل.",
+  "page_manager.no_annotations": "لا توجد تعليقات توضيحية",
+  "page_manager.no_annotations_msg": "هذه الصفحة لا تحتوي على تعليقات توضيحية لإدارتها.",
+  "page_manager.thumbnail_error": "فشل في عرض الصور المصغرة: {error}",
+  "page_manager.saved": "تم الحفظ! {pages} صفحة",
+  "page_manager.extracted": "تم الاستخراج! {pages} صفحة",
+  "page_manager.page_label": "صفحة {number}",
+  "page_manager.ext_badge": "EXT",
+  "page_manager.new_badge": "جديد",
+  "page_manager.loading": "جارٍ التحميل...",
+  "page_manager.annotation_count": "✎ {count} تعليق توضيحي",
+  "page_manager.annotation_count_plural": "✎ {count} تعليقات توضيحية",
+
+  "add_text.title": "إضافة تعليق نصي",
+  "add_text.hint": "انقر على الصفحة لتحديد موضع النص",
+  "add_text.text_label": "النص:",
+  "add_text.text_placeholder": "أدخل النص...",
+  "add_text.size_label": "الحجم:",
+  "add_text.color_label": "اللون:",
+  "add_text.apply": "تطبيق النص",
+
+  "add_image.title": "إضافة صورة متراكبة",
+  "add_image.hint": "انقر على الصفحة لتحديد موضع الصورة، أو استخدم إعدادًا مسبقًا",
+  "add_image.no_image": "لم يتم اختيار صورة",
+  "add_image.browse": "استعراض صورة...",
+  "add_image.position": "الموضع:",
+  "add_image.custom": "مخصص (انقر)",
+  "add_image.scale": "المقياس:",
+  "add_image.apply": "تطبيق الصورة",
+  "add_image.select_dialog": "اختيار صورة",
+  "add_image.error_loading": "خطأ في تحميل الصورة",
+
+  "signature.title": "إضافة توقيع",
+  "signature.draw_hint": "ارسم توقيعك أدناه",
+  "signature.sign_here": "وقّع هنا",
+  "signature.pen_label": "القلم:",
+  "signature.width_label": "العرض:",
+  "signature.clear": "مسح",
+  "signature.tab_draw": "رسم التوقيع",
+  "signature.upload_hint": "حمّل صورة توقيع (يُفضل PNG بخلفية شفافة)",
+  "signature.no_image": "لم يتم اختيار صورة",
+  "signature.browse": "استعراض صورة...",
+  "signature.tab_upload": "تحميل صورة",
+  "signature.position_hint": "انقر على الصفحة أدناه لتحديد موضع التوقيع",
+  "signature.position_label": "الموضع:",
+  "signature.custom": "مخصص (انقر)",
+  "signature.bottom_center": "أسفل الوسط",
+  "signature.bottom_left": "أسفل اليسار",
+  "signature.bottom_right": "أسفل اليمين",
+  "signature.scale_label": "المقياس:",
+  "signature.apply": "تطبيق التوقيع",
+  "signature.error_loading": "خطأ في تحميل الصورة",
+
+  "eraser.title": "أداة الممحاة",
+  "eraser.hint": "ارسم على الصفحة لمسح المحتوى",
+  "eraser.size_label": "حجم الممحاة:",
+  "eraser.undo": "تراجع",
+  "eraser.clear_all": "مسح الكل",
+  "eraser.apply": "تطبيق الممحاة",
+
+  "annotations.title": "إدارة التعليقات التوضيحية",
+  "annotations.no_annotations": "لا توجد تعليقات توضيحية",
+  "annotations.type_text": "نص",
+  "annotations.type_image": "صورة",
+
+  "insert_pages.title": "إدراج صفحات من PDF",
+  "insert_pages.no_file": "لم يتم اختيار ملف",
+  "insert_pages.browse": "استعراض PDF...",
+  "insert_pages.select_all": "تحديد الكل",
+  "insert_pages.pages_available": "{count} صفحة متاحة",
+  "insert_pages.insert_btn": "إدراج {count} صفحة",
+  "insert_pages.insert_btn_plural": "إدراج {count} صفحات",
+  "insert_pages.select_dialog": "اختيار PDF",
+
+  "preview.title": "معاينة الصفحة",
+  "preview.previous": "◀ السابق",
+  "preview.next": "التالي ▶",
+  "preview.page_of": "صفحة {current} من {total}",
+
+  "lo_install.title": "تثبيت LibreOffice",
+  "lo_install.required": "LibreOffice مطلوب",
+  "lo_install.info": "LibreOffice مطلوب لتحويل PowerPoint إلى PDF.\n\nسيتم تنزيله (~300 MB) وتثبيته تلقائيًا.\nهذا إعداد لمرة واحدة. لن يتم رفع ملفاتك أبدًا.",
+  "lo_install.starting": "جارٍ بدء التنزيل...",
+  "lo_install.manual": "تثبيت يدوي",
+  "lo_install.not_now": "ليس الآن",
+  "lo_install.download": "تنزيل && تثبيت",
+  "lo_install.success_msg": "تم تثبيت LibreOffice بنجاح!",
+  "lo_install.success_title": "نجاح",
+  "lo_install.success_detail": "تم تثبيت LibreOffice بنجاح!\n\nتحويل PPT إلى PDF متاح الآن.",
+  "lo_install.failed_title": "فشل التثبيت",
+  "lo_install.failed_msg": "تعذر تثبيت LibreOffice:\n\n{error}",
+  "lo_install.retry": "إعادة المحاولة",
+  "lo_install.manual_title": "التثبيت اليدوي",
+
+  "settings.title": "الإعدادات",
+  "settings.appearance": "المظهر",
+  "settings.theme": "السمة:",
+  "settings.switch_dark": "التبديل إلى الوضع الداكن",
+  "settings.switch_light": "التبديل إلى الوضع الفاتح",
+  "settings.language_group": "اللغة",
+  "settings.language_label": "اللغة:",
+  "settings.restart_title": "إعادة التشغيل مطلوبة",
+  "settings.restart_msg": "يرجى إعادة تشغيل LocalPDF لتطبيق تغيير اللغة بالكامل.",
+  "settings.output_folder": "مجلد الإخراج الافتراضي",
+  "settings.same_as_input": "نفس مجلد الملف المدخل",
+  "settings.select_folder": "اختيار مجلد الإخراج",
+  "settings.lo_group": "LibreOffice (لتحويل PPT)",
+  "settings.lo_checking": "جارٍ التحقق...",
+  "settings.lo_installed": "مثبّت: {version}\nالمسار: {path}",
+  "settings.lo_not_installed": "غير مثبّت. مطلوب لتحويل PPT إلى PDF.",
+  "settings.lo_auto_install": "تثبيت LibreOffice تلقائيًا",
+  "settings.lo_instructions": "عرض تعليمات التثبيت",
+  "settings.lo_install_title": "تثبيت LibreOffice",
+  "settings.about": "حول",
+  "settings.about_text": "LocalPDF v1.1\n\nمجموعة أدوات PDF كاملة — ضغط ودمج وتقسيم وحماية وعلامة مائية\nوتحويل وإدارة الصفحات. معالجة محلية 100%.\n\nتم البناء باستخدام Python وPyQt6 وPyMuPDF وReportLab.",
+
+  "validate.no_file": "لم يتم اختيار ملف.",
+  "validate.file_not_found": "الملف غير موجود: {name}",
+  "validate.wrong_ext_pdf": "المتوقع ملف PDF، تم الحصول على ملف '{ext}'.",
+  "validate.empty_file": "الملف فارغ (0 بايت).",
+  "validate.cannot_open_pdf": "لا يمكن فتح ملف PDF هذا. قد يكون تالفًا.\n({error})",
+  "validate.encrypted": "ملف PDF هذا محمي بكلمة مرور. يرجى إلغاء قفله أولاً.",
+  "validate.no_pages": "ملف PDF هذا لا يحتوي على صفحات.",
+  "validate.wrong_ext_ppt": "المتوقع ملف PowerPoint (.ppt أو .pptx)، تم الحصول على '{ext}'.",
+  "validate.corrupted_pptx": "يبدو أن هذا الملف تالف (ليس ملف PPTX صالحًا).",
+  "validate.corrupted_ppt": "يبدو أن هذا الملف تالف (ليس ملف PPT صالحًا).",
+  "validate.cannot_read": "لا يمكن قراءة هذا الملف: {error}",
+  "validate.unsupported_image": "صيغة صورة غير مدعومة: '{ext}'",
+  "validate.cannot_open_image": "لا يمكن فتح الصورة: {error}",
+  "validate.disk_space": "لا توجد مساحة كافية على القرص. مطلوب {needed}، المتاح فقط {available}.",
+
+  "lo_instructions.macos": "LibreOffice مطلوب لتحويل PPT.\n\nقم بتثبيته مجانًا من:\nhttps://www.libreoffice.org/download\n\nأو عبر Homebrew:\nbrew install --cask libreoffice",
+  "lo_instructions.windows": "LibreOffice مطلوب لتحويل PPT.\n\nقم بتنزيل المثبّت المجاني من:\nhttps://www.libreoffice.org/download\n\nشغّل المثبّت وأعد تشغيل LocalPDF.",
+  "lo_instructions.linux": "LibreOffice مطلوب لتحويل PPT.\n\nقم بالتثبيت عبر مدير الحزم:\nsudo apt install libreoffice\n\nأو قم بالتنزيل من:\nhttps://www.libreoffice.org/download"
+}

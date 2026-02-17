@@ -6,6 +6,8 @@ from PyQt6.QtWidgets import (
 )
 from PyQt6.QtCore import pyqtSignal
 
+from i18n import t
+
 
 class FileSizeInput(QWidget):
     """
@@ -13,12 +15,6 @@ class FileSizeInput(QWidget):
     """
 
     value_changed = pyqtSignal(float)
-
-    PRESETS = {
-        "Email (2 MB)": 2.0,
-        "Web (5 MB)": 5.0,
-        "Print (10 MB)": 10.0,
-    }
 
     def __init__(self, parent=None):
         super().__init__(parent)
@@ -29,7 +25,7 @@ class FileSizeInput(QWidget):
         layout.setContentsMargins(0, 0, 0, 0)
 
         # Label
-        label = QLabel("Target Size")
+        label = QLabel(t("file_size.target_size"))
         label.setStyleSheet("font-weight: bold; font-size: 14px;")
         layout.addWidget(label)
 
@@ -48,8 +44,13 @@ class FileSizeInput(QWidget):
         input_row.addSpacing(12)
 
         # Preset buttons
+        presets = [
+            (t("file_size.email"), 2.0),
+            (t("file_size.web"), 5.0),
+            (t("file_size.print"), 10.0),
+        ]
         self._preset_buttons = []
-        for label_text, value in self.PRESETS.items():
+        for label_text, value in presets:
             btn = QPushButton(label_text)
             btn.setProperty("class", "presetButton")
             btn.setCheckable(True)

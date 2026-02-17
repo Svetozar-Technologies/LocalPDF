@@ -14,6 +14,7 @@ from ui.components.result_card import ResultCard
 from workers.image_to_pdf_worker import ImageToPdfWorker
 from core.image_to_pdf import PageOrientation
 from core.utils import validate_image, get_output_path, format_file_size, check_disk_space
+from i18n import t
 
 
 class ImageToPdfWidget(QWidget):
@@ -35,18 +36,18 @@ class ImageToPdfWidget(QWidget):
         layout.setContentsMargins(32, 24, 32, 24)
         layout.setSpacing(16)
 
-        title = QLabel("Image to PDF")
+        title = QLabel(t("image_to_pdf.title"))
         title.setProperty("class", "sectionTitle")
         layout.addWidget(title)
 
-        subtitle = QLabel("Convert images to a single PDF. One image per page, fit to A4.")
+        subtitle = QLabel(t("image_to_pdf.subtitle"))
         subtitle.setProperty("class", "sectionSubtitle")
         subtitle.setWordWrap(True)
         layout.addWidget(subtitle)
 
         self._drop_zone = MultiDropZone(
             accepted_extensions=[".jpg", ".jpeg", ".png", ".bmp", ".tiff", ".tif", ".webp"],
-            placeholder_text="Drop images here or click to browse",
+            placeholder_text=t("image_to_pdf.drop_text"),
         )
         layout.addWidget(self._drop_zone)
 
@@ -54,14 +55,14 @@ class ImageToPdfWidget(QWidget):
         layout.addWidget(self._file_list)
 
         # Orientation options
-        orient_group = QGroupBox("Page Orientation")
+        orient_group = QGroupBox(t("image_to_pdf.orientation"))
         orient_layout = QHBoxLayout(orient_group)
 
         self._orient_group = QButtonGroup(self)
         orientations = [
-            ("Auto (based on image)", PageOrientation.AUTO),
-            ("Portrait", PageOrientation.PORTRAIT),
-            ("Landscape", PageOrientation.LANDSCAPE),
+            (t("image_to_pdf.auto"), PageOrientation.AUTO),
+            (t("image_to_pdf.portrait"), PageOrientation.PORTRAIT),
+            (t("image_to_pdf.landscape"), PageOrientation.LANDSCAPE),
         ]
 
         for label, value in orientations:
@@ -74,7 +75,7 @@ class ImageToPdfWidget(QWidget):
 
         layout.addWidget(orient_group)
 
-        self._convert_btn = QPushButton("Convert to PDF")
+        self._convert_btn = QPushButton(t("image_to_pdf.button"))
         self._convert_btn.setObjectName("primaryButton")
         self._convert_btn.setEnabled(False)
         layout.addWidget(self._convert_btn)
@@ -116,8 +117,8 @@ class ImageToPdfWidget(QWidget):
 
         if errors:
             QMessageBox.warning(
-                self, "Some Files Skipped",
-                "The following files were skipped:\n\n" + "\n".join(errors),
+                self, t("common.some_files_skipped"),
+                t("common.files_skipped_msg", errors="\n".join(errors)),
             )
 
     def _update_button_state(self):
@@ -152,7 +153,7 @@ class ImageToPdfWidget(QWidget):
         total_size = sum(os.path.getsize(p) for p in paths)
         has_space, space_msg = check_disk_space(first_dir, total_size)
         if not has_space:
-            QMessageBox.warning(self, "Disk Space", space_msg)
+            QMessageBox.warning(self, t("common.disk_space"), space_msg)
             return
 
         orientation = self._get_orientation()
@@ -179,17 +180,17 @@ class ImageToPdfWidget(QWidget):
         if result.success:
             self._result_card.show_simple_result(
                 result.output_path,
-                title=f"Created PDF with {result.page_count} pages ({format_file_size(result.output_size)})",
+                title=t("image_to_pdf.complete", pages=result.page_count, size=format_file_size(result.output_size)),
             )
         else:
-            QMessageBox.critical(self, "Error", result.error_message or "Conversion failed.")
+            QMessageBox.critical(self, t("common.error"), result.error_message or t("image_to_pdf.failed"))
             self._progress.reset()
 
     def _on_convert_error(self, error_msg: str):
         self._progress.reset()
         self._convert_btn.setEnabled(True)
         self._worker = None
-        QMessageBox.critical(self, "Error", error_msg)
+        QMessageBox.critical(self, t("common.error"), error_msg)
 
     def _on_cancel_clicked(self):
         if self._worker:

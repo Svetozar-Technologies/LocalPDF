@@ -14,6 +14,7 @@ from ui.components.result_card import ResultCard
 from workers.convert_worker import ConvertWorker
 from core.utils import validate_ppt, get_output_path, detect_libreoffice
 from core.branded_pdf import BrandingConfig
+from i18n import t
 
 
 class ConvertWidget(QWidget):
@@ -39,11 +40,11 @@ class ConvertWidget(QWidget):
         layout.setSpacing(16)
 
         # Title
-        title = QLabel("Convert PPT to PDF")
+        title = QLabel(t("convert.title"))
         title.setProperty("class", "sectionTitle")
         layout.addWidget(title)
 
-        subtitle = QLabel("Convert PowerPoint presentations to PDF. Simple or branded with cover page and watermark.")
+        subtitle = QLabel(t("convert.subtitle"))
         subtitle.setProperty("class", "sectionSubtitle")
         subtitle.setWordWrap(True)
         layout.addWidget(subtitle)
@@ -51,17 +52,17 @@ class ConvertWidget(QWidget):
         # Drop zone
         self._drop_zone = DropZone(
             accepted_extensions=[".ppt", ".pptx"],
-            placeholder_text="Drop PPT/PPTX file here or click to browse",
+            placeholder_text=t("convert.drop_text"),
         )
         layout.addWidget(self._drop_zone)
 
         # Mode selection
-        mode_group = QGroupBox("Conversion Mode")
+        mode_group = QGroupBox(t("convert.mode_group"))
         mode_layout = QVBoxLayout(mode_group)
 
         self._mode_group = QButtonGroup(self)
-        self._simple_radio = QRadioButton("Simple — Direct conversion to PDF")
-        self._branded_radio = QRadioButton("Branded — Cover page, custom layout, watermark")
+        self._simple_radio = QRadioButton(t("convert.mode_simple"))
+        self._branded_radio = QRadioButton(t("convert.mode_branded"))
         self._simple_radio.setChecked(True)
         self._mode_group.addButton(self._simple_radio, 0)
         self._mode_group.addButton(self._branded_radio, 1)
@@ -70,37 +71,37 @@ class ConvertWidget(QWidget):
         layout.addWidget(mode_group)
 
         # Branded options (hidden by default)
-        self._branded_options = QGroupBox("Branded PDF Options")
+        self._branded_options = QGroupBox(t("convert.branded_options"))
         branded_layout = QVBoxLayout(self._branded_options)
 
         # Brand name
         brand_row = QHBoxLayout()
-        brand_row.addWidget(QLabel("Brand Name:"))
+        brand_row.addWidget(QLabel(t("convert.brand_name")))
         self._brand_input = QLineEdit()
-        self._brand_input.setPlaceholderText("e.g., MyCompany (optional)")
+        self._brand_input.setPlaceholderText(t("convert.brand_placeholder"))
         brand_row.addWidget(self._brand_input)
         branded_layout.addLayout(brand_row)
 
         # Subject name
         row1 = QHBoxLayout()
-        row1.addWidget(QLabel("Subject Name:"))
+        row1.addWidget(QLabel(t("convert.subject_name")))
         self._subject_input = QLineEdit()
-        self._subject_input.setPlaceholderText("e.g., ANATOMY, MEDICINE, SURGERY")
+        self._subject_input.setPlaceholderText(t("convert.subject_placeholder"))
         self._subject_input.setText("ANATOMY")
         row1.addWidget(self._subject_input)
         branded_layout.addLayout(row1)
 
         # Watermark
         row2 = QHBoxLayout()
-        row2.addWidget(QLabel("Watermark Text:"))
+        row2.addWidget(QLabel(t("convert.watermark_text")))
         self._watermark_input = QLineEdit()
-        self._watermark_input.setPlaceholderText("e.g., CONFIDENTIAL, MyBrand (optional)")
+        self._watermark_input.setPlaceholderText(t("convert.watermark_placeholder"))
         row2.addWidget(self._watermark_input)
         branded_layout.addLayout(row2)
 
         # Watermark opacity
         opacity_row = QHBoxLayout()
-        opacity_row.addWidget(QLabel("Watermark Opacity:"))
+        opacity_row.addWidget(QLabel(t("convert.watermark_opacity")))
         self._opacity_slider = QSlider(Qt.Orientation.Horizontal)
         self._opacity_slider.setMinimum(1)
         self._opacity_slider.setMaximum(100)
@@ -117,10 +118,10 @@ class ConvertWidget(QWidget):
 
         # Page format
         format_row = QHBoxLayout()
-        format_row.addWidget(QLabel("Page Format:"))
+        format_row.addWidget(QLabel(t("convert.page_format")))
         self._format_group = QButtonGroup(self)
-        self._portrait_radio = QRadioButton("A4 Portrait (2 slides/page)")
-        self._landscape_radio = QRadioButton("A4 Landscape (1 slide/page)")
+        self._portrait_radio = QRadioButton(t("convert.portrait_format"))
+        self._landscape_radio = QRadioButton(t("convert.landscape_format"))
         self._portrait_radio.setChecked(True)
         self._format_group.addButton(self._portrait_radio, 0)
         self._format_group.addButton(self._landscape_radio, 1)
@@ -129,17 +130,17 @@ class ConvertWidget(QWidget):
         branded_layout.addLayout(format_row)
 
         # Cover page checkbox
-        self._cover_check = QCheckBox("Include cover page")
+        self._cover_check = QCheckBox(t("convert.include_cover"))
         self._cover_check.setChecked(True)
         branded_layout.addWidget(self._cover_check)
 
         # Cover image
         cover_row = QHBoxLayout()
-        self._cover_btn = QPushButton("Select Cover Image (optional)")
+        self._cover_btn = QPushButton(t("convert.select_cover"))
         self._cover_btn.setProperty("class", "secondaryButton")
         self._cover_btn.clicked.connect(self._select_cover_image)
         cover_row.addWidget(self._cover_btn)
-        self._cover_path_label = QLabel("No image selected")
+        self._cover_path_label = QLabel(t("convert.no_image"))
         self._cover_path_label.setProperty("class", "textCaption")
         cover_row.addWidget(self._cover_path_label, 1)
         branded_layout.addLayout(cover_row)
@@ -148,7 +149,7 @@ class ConvertWidget(QWidget):
         layout.addWidget(self._branded_options)
 
         # Convert button
-        self._convert_btn = QPushButton("Convert to PDF")
+        self._convert_btn = QPushButton(t("convert.button"))
         self._convert_btn.setObjectName("primaryButton")
         self._convert_btn.setEnabled(False)
         layout.addWidget(self._convert_btn)
@@ -167,9 +168,9 @@ class ConvertWidget(QWidget):
         layout.addWidget(self._lo_status)
 
         # Install LibreOffice button (shown when LO is missing)
-        self._install_lo_btn = QPushButton("Install LibreOffice")
+        self._install_lo_btn = QPushButton(t("convert.install_lo"))
         self._install_lo_btn.setObjectName("primaryButton")
-        self._install_lo_btn.setToolTip("Download and install LibreOffice automatically")
+        self._install_lo_btn.setToolTip(t("convert.install_lo_tooltip"))
         self._install_lo_btn.clicked.connect(self._on_install_libreoffice)
         self._install_lo_btn.hide()
         layout.addWidget(self._install_lo_btn)
@@ -194,14 +195,14 @@ class ConvertWidget(QWidget):
         lo = detect_libreoffice()
         if lo.found:
             version = lo.version.split('\n')[0] if lo.version else ""
-            self._lo_status.setText(f"LibreOffice detected: {version}")
+            self._lo_status.setText(t("convert.lo_detected", version=version))
             self._lo_status.setProperty("class", "statusGreen")
             self._install_lo_btn.hide()
         else:
-            self._lo_status.setText("LibreOffice not found — required for PPT conversion")
+            self._lo_status.setText(t("convert.lo_not_found"))
             self._lo_status.setProperty("class", "statusRed")
             self._convert_btn.setEnabled(False)
-            self._convert_btn.setToolTip("Install LibreOffice to enable PPT conversion")
+            self._convert_btn.setToolTip(t("convert.lo_install_hint"))
             self._install_lo_btn.show()
 
     def _on_mode_changed(self):
@@ -212,7 +213,7 @@ class ConvertWidget(QWidget):
 
     def _select_cover_image(self):
         path, _ = QFileDialog.getOpenFileName(
-            self, "Select Cover Image", "",
+            self, t("convert.select_cover_dialog"), "",
             "Images (*.png *.jpg *.jpeg *.bmp *.svg)",
         )
         if path:
@@ -222,7 +223,7 @@ class ConvertWidget(QWidget):
     def _on_file_selected(self, file_path: str):
         result = validate_ppt(file_path)
         if not result.valid:
-            QMessageBox.warning(self, "Invalid File", result.error_message)
+            QMessageBox.warning(self, t("common.invalid_file"), result.error_message)
             self._drop_zone.reset()
             return
 
@@ -294,9 +295,8 @@ class ConvertWidget(QWidget):
 
         if hasattr(result, 'libreoffice_missing') and result.libreoffice_missing:
             reply = QMessageBox.question(
-                self, "LibreOffice Required",
-                "LibreOffice is needed for PPT conversion.\n\n"
-                "Would you like to download and install it now? (~300 MB)",
+                self, t("convert.lo_required_title"),
+                t("convert.lo_required_msg"),
                 QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No,
             )
             if reply == QMessageBox.StandardButton.Yes:
@@ -308,17 +308,17 @@ class ConvertWidget(QWidget):
         output = getattr(result, 'output_path', '')
 
         if success and output and os.path.exists(output):
-            self._result_card.show_simple_result(output, title="Conversion Complete!")
+            self._result_card.show_simple_result(output, title=t("convert.complete"))
         else:
-            error_msg = getattr(result, 'error_message', 'Conversion failed.')
-            QMessageBox.critical(self, "Error", error_msg)
+            error_msg = getattr(result, 'error_message', t("convert.failed"))
+            QMessageBox.critical(self, t("common.error"), error_msg)
             self._progress.reset()
 
     def _on_convert_error(self, error_msg: str):
         self._progress.reset()
         self._convert_btn.setEnabled(True)
         self._worker = None
-        QMessageBox.critical(self, "Error", error_msg)
+        QMessageBox.critical(self, t("common.error"), error_msg)
 
     def _on_cancel_clicked(self):
         if self._worker:

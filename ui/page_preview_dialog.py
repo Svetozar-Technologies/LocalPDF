@@ -11,6 +11,7 @@ from PyQt6.QtCore import Qt
 from PyQt6.QtGui import QImage, QPixmap, QKeyEvent
 
 from core.page_manager import PageSource, PageManager
+from i18n import t
 
 
 class PagePreviewDialog(QDialog):
@@ -18,7 +19,7 @@ class PagePreviewDialog(QDialog):
 
     def __init__(self, page_sources: List[PageSource], start_index: int = 0, parent=None):
         super().__init__(parent)
-        self.setWindowTitle("Page Preview")
+        self.setWindowTitle(t("preview.title"))
         self.setModal(True)
 
         # Size to ~80% of screen
@@ -56,7 +57,7 @@ class PagePreviewDialog(QDialog):
         nav = QHBoxLayout()
         nav.setSpacing(12)
 
-        self._prev_btn = QPushButton("\u25C0 Previous")
+        self._prev_btn = QPushButton(t("preview.previous"))
         self._prev_btn.setProperty("class", "secondaryButton")
         self._prev_btn.clicked.connect(self._go_prev)
         nav.addWidget(self._prev_btn)
@@ -69,7 +70,7 @@ class PagePreviewDialog(QDialog):
 
         nav.addStretch()
 
-        self._next_btn = QPushButton("Next \u25B6")
+        self._next_btn = QPushButton(t("preview.next"))
         self._next_btn.setProperty("class", "secondaryButton")
         self._next_btn.clicked.connect(self._go_next)
         nav.addWidget(self._next_btn)
@@ -92,7 +93,7 @@ class PagePreviewDialog(QDialog):
         self._image_label.setPixmap(pixmap)
 
         total = len(self._sources)
-        self._page_label.setText(f"Page {self._current + 1} of {total}")
+        self._page_label.setText(t("preview.page_of", current=self._current + 1, total=total))
         self._prev_btn.setEnabled(self._current > 0)
         self._next_btn.setEnabled(self._current < total - 1)
 

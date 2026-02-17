@@ -12,6 +12,7 @@ from PyQt6.QtGui import QImage, QPixmap
 
 from core.page_manager import PageSource, PageSourceType, PageManager
 from workers.page_manager_worker import ThumbnailWorker
+from i18n import t
 
 
 class _InsertThumbnail(QFrame):
@@ -39,7 +40,7 @@ class _InsertThumbnail(QFrame):
         self._image_label.setStyleSheet("background: #f0f0f0; border: 1px solid #ddd; border-radius: 3px;")
         layout.addWidget(self._image_label, alignment=Qt.AlignmentFlag.AlignCenter)
 
-        self._label = QLabel(f"Page {self._page_index + 1}")
+        self._label = QLabel(t("page_manager.page_label", number=self._page_index + 1))
         self._label.setAlignment(Qt.AlignmentFlag.AlignCenter)
         self._label.setStyleSheet("font-size: 10px; color: #666;")
         layout.addWidget(self._label)
@@ -83,7 +84,7 @@ class InsertPagesDialog(QDialog):
 
     def __init__(self, parent=None):
         super().__init__(parent)
-        self.setWindowTitle("Insert Pages from PDF")
+        self.setWindowTitle(t("insert_pages.title"))
         self.setMinimumSize(700, 550)
         self.resize(700, 550)
         self.setModal(True)
@@ -106,11 +107,11 @@ class InsertPagesDialog(QDialog):
         file_row = QHBoxLayout()
         file_row.setSpacing(8)
 
-        self._file_label = QLabel("No file selected")
+        self._file_label = QLabel(t("insert_pages.no_file"))
         self._file_label.setStyleSheet("color: #666; font-size: 13px;")
         file_row.addWidget(self._file_label, 1)
 
-        self._browse_btn = QPushButton("Browse PDF...")
+        self._browse_btn = QPushButton(t("insert_pages.browse"))
         self._browse_btn.setProperty("class", "secondaryButton")
         self._browse_btn.clicked.connect(self._on_browse)
         file_row.addWidget(self._browse_btn)
@@ -123,7 +124,7 @@ class InsertPagesDialog(QDialog):
         self._info_label.setStyleSheet("font-size: 12px; color: #999;")
         info_row.addWidget(self._info_label)
 
-        self._select_all_btn = QPushButton("Select All")
+        self._select_all_btn = QPushButton(t("insert_pages.select_all"))
         self._select_all_btn.setProperty("class", "secondaryButton")
         self._select_all_btn.clicked.connect(self._on_select_all)
         self._select_all_btn.hide()
@@ -148,12 +149,12 @@ class InsertPagesDialog(QDialog):
         btn_row = QHBoxLayout()
         btn_row.addStretch()
 
-        self._cancel_btn = QPushButton("Cancel")
+        self._cancel_btn = QPushButton(t("common.cancel"))
         self._cancel_btn.setProperty("class", "secondaryButton")
         self._cancel_btn.clicked.connect(self.reject)
         btn_row.addWidget(self._cancel_btn)
 
-        self._insert_btn = QPushButton("Insert 0 Pages")
+        self._insert_btn = QPushButton(t("insert_pages.insert_btn_plural", count=0))
         self._insert_btn.setObjectName("primaryButton")
         self._insert_btn.setEnabled(False)
         self._insert_btn.clicked.connect(self._on_insert)
@@ -162,7 +163,7 @@ class InsertPagesDialog(QDialog):
         layout.addLayout(btn_row)
 
     def _on_browse(self):
-        path, _ = QFileDialog.getOpenFileName(self, "Select PDF", "", "PDF Files (*.pdf)")
+        path, _ = QFileDialog.getOpenFileName(self, t("insert_pages.select_dialog"), "", "PDF Files (*.pdf)")
         if not path:
             return
 
@@ -192,7 +193,7 @@ class InsertPagesDialog(QDialog):
     def _on_thumbnails_done(self):
         self._thumbnail_worker = None
         self._select_all_btn.show()
-        self._info_label.setText(f"{len(self._cells)} pages available")
+        self._info_label.setText(t("insert_pages.pages_available", count=len(self._cells)))
 
     def _on_thumbnail_error(self, msg: str):
         self._thumbnail_worker = None
@@ -230,7 +231,10 @@ class InsertPagesDialog(QDialog):
             cell.selected = (cell.page_index in self._selected_indices)
 
         count = len(self._selected_indices)
-        self._insert_btn.setText(f"Insert {count} Page{'s' if count != 1 else ''}")
+        if count != 1:
+            self._insert_btn.setText(t("insert_pages.insert_btn_plural", count=count))
+        else:
+            self._insert_btn.setText(t("insert_pages.insert_btn", count=count))
         self._insert_btn.setEnabled(count > 0)
 
     def _on_insert(self):

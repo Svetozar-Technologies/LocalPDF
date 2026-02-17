@@ -12,6 +12,7 @@ from PyQt6.QtCore import Qt
 from PyQt6.QtGui import QImage, QPixmap
 
 from core.page_manager import PageSource, PageManager, TextAnnotation, ImageAnnotation
+from i18n import t
 
 
 # Marker colours: blue for text, orange for image/signature
@@ -25,7 +26,7 @@ class ManageAnnotationsDialog(QDialog):
 
     def __init__(self, source: PageSource, parent=None):
         super().__init__(parent)
-        self.setWindowTitle("Manage Annotations")
+        self.setWindowTitle(t("annotations.title"))
         self.setMinimumSize(750, 650)
         self.resize(750, 650)
         self.setModal(True)
@@ -72,7 +73,7 @@ class ManageAnnotationsDialog(QDialog):
         # Close button
         btn_row = QHBoxLayout()
         btn_row.addStretch()
-        close_btn = QPushButton("Close")
+        close_btn = QPushButton(t("common.close"))
         close_btn.setProperty("class", "secondaryButton")
         close_btn.clicked.connect(self.accept)
         btn_row.addWidget(close_btn)
@@ -95,13 +96,13 @@ class ManageAnnotationsDialog(QDialog):
         num = 1
         for ann in self._source.text_annotations:
             desc = ann.text if len(ann.text) <= 30 else ann.text[:27] + "..."
-            entries.append((num, "text", "Text", desc, ann))
+            entries.append((num, "text", t("annotations.type_text"), desc, ann))
             num += 1
         for ann in self._source.image_annotations:
             desc = os.path.basename(ann.image_path) if ann.image_path else "image"
             if len(desc) > 30:
                 desc = desc[:27] + "..."
-            entries.append((num, "image", "Image", desc, ann))
+            entries.append((num, "image", t("annotations.type_image"), desc, ann))
             num += 1
         return entries
 
@@ -177,7 +178,7 @@ class ManageAnnotationsDialog(QDialog):
                 w.deleteLater()
 
         if not entries:
-            empty = QLabel("No annotations")
+            empty = QLabel(t("annotations.no_annotations"))
             empty.setAlignment(Qt.AlignmentFlag.AlignCenter)
             empty.setStyleSheet("color: #999; font-size: 13px; padding: 20px;")
             self._list_layout.addWidget(empty)
@@ -219,7 +220,7 @@ class ManageAnnotationsDialog(QDialog):
             row_layout.addWidget(desc_lbl, 1)
 
             # Delete button
-            del_btn = QPushButton("Delete")
+            del_btn = QPushButton(t("common.delete"))
             del_btn.setFixedWidth(70)
             del_btn.setStyleSheet(
                 "QPushButton { background: #f44336; color: white; border: none; "

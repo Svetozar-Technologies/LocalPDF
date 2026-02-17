@@ -8,6 +8,7 @@ from PyQt6.QtCore import pyqtSignal, QUrl
 from PyQt6.QtGui import QDesktopServices
 
 from core.utils import format_file_size
+from i18n import t
 
 
 class ResultCard(QWidget):
@@ -26,7 +27,7 @@ class ResultCard(QWidget):
         layout = QVBoxLayout(self)
 
         # Title
-        self._title_label = QLabel("Compression Complete!")
+        self._title_label = QLabel(t("result.complete"))
         self._title_label.setProperty("class", "resultTitle")
         layout.addWidget(self._title_label)
 
@@ -55,17 +56,17 @@ class ResultCard(QWidget):
         # Buttons row
         btn_row = QHBoxLayout()
 
-        self._open_file_btn = QPushButton("Open File")
+        self._open_file_btn = QPushButton(t("result.open_file"))
         self._open_file_btn.setProperty("class", "secondaryButton")
         self._open_file_btn.clicked.connect(self._open_file)
         btn_row.addWidget(self._open_file_btn)
 
-        self._open_folder_btn = QPushButton("Open Folder")
+        self._open_folder_btn = QPushButton(t("result.open_folder"))
         self._open_folder_btn.setProperty("class", "secondaryButton")
         self._open_folder_btn.clicked.connect(self._open_folder)
         btn_row.addWidget(self._open_folder_btn)
 
-        self._another_btn = QPushButton("Process Another")
+        self._another_btn = QPushButton(t("result.process_another"))
         self._another_btn.setProperty("class", "secondaryButton")
         self._another_btn.clicked.connect(self.compress_another.emit)
         btn_row.addWidget(self._another_btn)
@@ -83,12 +84,12 @@ class ResultCard(QWidget):
         """Populate and show the card."""
         self._output_path = output_path
         self._title_label.setText(title)
-        self._before_label.setText(f"Before: {format_file_size(original_size)}")
-        self._after_label.setText(f"After: {format_file_size(compressed_size)}")
+        self._before_label.setText(t("result.before", size=format_file_size(original_size)))
+        self._after_label.setText(t("result.after", size=format_file_size(compressed_size)))
 
         if original_size > 0 and compressed_size < original_size:
             reduction = (1 - compressed_size / original_size) * 100
-            self._reduction_label.setText(f"({reduction:.0f}% smaller)")
+            self._reduction_label.setText(t("result.smaller", percent=reduction))
         else:
             self._reduction_label.setText("")
 
@@ -96,12 +97,12 @@ class ResultCard(QWidget):
         self._open_file_btn.setVisible(bool(output_path))
         self.show()
 
-    def show_simple_result(self, output_path: str, title: str = "Done!"):
+    def show_simple_result(self, output_path: str, title: str = None):
         """Show result without size comparison (for conversions)."""
         self._output_path = output_path
-        self._title_label.setText(title)
+        self._title_label.setText(title or t("result.done"))
         self._before_label.setText("")
-        self._after_label.setText(f"Saved: {os.path.basename(output_path)}")
+        self._after_label.setText(t("result.saved", filename=os.path.basename(output_path)))
 
         size = os.path.getsize(output_path) if os.path.exists(output_path) else 0
         self._reduction_label.setText(f"({format_file_size(size)})" if size > 0 else "")

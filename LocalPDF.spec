@@ -46,6 +46,7 @@ datas = [
     (str(ROOT / 'ui'), 'ui'),
     (str(ROOT / 'workers'), 'workers'),
     (str(ROOT / 'assets'), 'assets'),
+    (str(ROOT / 'i18n'), 'i18n'),
 ] + pyqt6_plugins
 
 # Hidden imports
@@ -101,6 +102,9 @@ hiddenimports = [
     'ui.components.progress_widget',
     'ui.components.result_card',
     'ui.components.file_list_widget',
+
+    # i18n
+    'i18n',
 
     # Workers
     'workers',

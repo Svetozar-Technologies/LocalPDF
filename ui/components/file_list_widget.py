@@ -12,6 +12,7 @@ from PyQt6.QtWidgets import (
 from PyQt6.QtCore import Qt, pyqtSignal
 
 from core.utils import format_file_size
+from i18n import t
 
 
 class FileStatus(Enum):
@@ -82,7 +83,7 @@ class _FileRow(QFrame):
         up_btn = QPushButton("\u25B2")
         up_btn.setProperty("class", "rowAction")
         up_btn.setFixedSize(28, 28)
-        up_btn.setToolTip("Move up")
+        up_btn.setToolTip(t("file_list.move_up"))
         up_btn.setCursor(Qt.CursorShape.PointingHandCursor)
         up_btn.clicked.connect(lambda: self.move_up_clicked.emit(self._index))
         layout.addWidget(up_btn)
@@ -91,7 +92,7 @@ class _FileRow(QFrame):
         down_btn = QPushButton("\u25BC")
         down_btn.setProperty("class", "rowAction")
         down_btn.setFixedSize(28, 28)
-        down_btn.setToolTip("Move down")
+        down_btn.setToolTip(t("file_list.move_down"))
         down_btn.setCursor(Qt.CursorShape.PointingHandCursor)
         down_btn.clicked.connect(lambda: self.move_down_clicked.emit(self._index))
         layout.addWidget(down_btn)
@@ -100,7 +101,7 @@ class _FileRow(QFrame):
         remove_btn = QPushButton("\u2715")
         remove_btn.setProperty("class", "rowActionRemove")
         remove_btn.setFixedSize(28, 28)
-        remove_btn.setToolTip("Remove")
+        remove_btn.setToolTip(t("common.remove"))
         remove_btn.setCursor(Qt.CursorShape.PointingHandCursor)
         remove_btn.clicked.connect(lambda: self.remove_clicked.emit(self._index))
         layout.addWidget(remove_btn)
@@ -110,17 +111,17 @@ class _FileRow(QFrame):
             return
         status = self._entry.status
         if status == FileStatus.PENDING:
-            self._status_label.setText("Pending")
+            self._status_label.setText(t("file_list.pending"))
             self._status_label.setProperty("class", "statusPending")
         elif status == FileStatus.PROCESSING:
-            self._status_label.setText("Processing...")
+            self._status_label.setText(t("file_list.processing"))
             self._status_label.setProperty("class", "statusProcessing")
         elif status == FileStatus.DONE:
-            text = self._entry.result_text or "Done"
+            text = self._entry.result_text or t("file_list.done")
             self._status_label.setText(text)
             self._status_label.setProperty("class", "statusDone")
         elif status == FileStatus.ERROR:
-            text = self._entry.error_text or "Error"
+            text = self._entry.error_text or t("common.error")
             self._status_label.setText(text)
             self._status_label.setProperty("class", "statusError")
         self._status_label.style().unpolish(self._status_label)
@@ -175,7 +176,7 @@ class FileListWidget(QWidget):
         outer_layout.addWidget(self._scroll)
 
         # Empty state label
-        self._empty_label = QLabel("No files added yet")
+        self._empty_label = QLabel(t("file_list.no_files"))
         self._empty_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
         self._empty_label.setProperty("class", "helperText")
         self._empty_label.setMinimumHeight(40)

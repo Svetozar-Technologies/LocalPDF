@@ -13,6 +13,7 @@ from ui.components.result_card import ResultCard
 from workers.compress_worker import CompressWorker
 from core.compressor import CompressionConfig
 from core.utils import validate_pdf, get_output_path, format_file_size, check_disk_space
+from i18n import t
 
 
 class CompressWidget(QWidget):
@@ -37,11 +38,11 @@ class CompressWidget(QWidget):
         layout.setSpacing(16)
 
         # Title
-        title = QLabel("Compress PDF")
+        title = QLabel(t("compress.title"))
         title.setProperty("class", "sectionTitle")
         layout.addWidget(title)
 
-        subtitle = QLabel("Reduce file size while maintaining quality. 100% local — your files never leave this computer.")
+        subtitle = QLabel(t("compress.subtitle"))
         subtitle.setProperty("class", "sectionSubtitle")
         subtitle.setWordWrap(True)
         layout.addWidget(subtitle)
@@ -49,7 +50,7 @@ class CompressWidget(QWidget):
         # Drop zone
         self._drop_zone = DropZone(
             accepted_extensions=[".pdf"],
-            placeholder_text="Drop PDF here or click to browse",
+            placeholder_text=t("compress.drop_text"),
         )
         layout.addWidget(self._drop_zone)
 
@@ -58,7 +59,7 @@ class CompressWidget(QWidget):
         layout.addWidget(self._size_input)
 
         # Compress button
-        self._compress_btn = QPushButton("Compress PDF")
+        self._compress_btn = QPushButton(t("compress.button"))
         self._compress_btn.setObjectName("primaryButton")
         self._compress_btn.setEnabled(False)
         layout.addWidget(self._compress_btn)
@@ -90,7 +91,7 @@ class CompressWidget(QWidget):
     def _on_file_selected(self, file_path: str):
         result = validate_pdf(file_path)
         if not result.valid:
-            QMessageBox.warning(self, "Invalid File", result.error_message)
+            QMessageBox.warning(self, t("common.invalid_file"), result.error_message)
             self._drop_zone.reset()
             return
 
@@ -115,9 +116,10 @@ class CompressWidget(QWidget):
         # Already small enough?
         if current_size <= target_bytes:
             QMessageBox.information(
-                self, "Already Small",
-                f"This file ({format_file_size(current_size)}) is already smaller "
-                f"than your target ({self._size_input.value_mb():.1f} MB)."
+                self, t("compress.already_small_title"),
+                t("compress.already_small_msg",
+                  current_size=format_file_size(current_size),
+                  target_size=f"{self._size_input.value_mb():.1f} MB"),
             )
             return
 
@@ -126,7 +128,7 @@ class CompressWidget(QWidget):
         # Check disk space
         has_space, space_msg = check_disk_space(os.path.dirname(output_path), current_size)
         if not has_space:
-            QMessageBox.warning(self, "Disk Space", space_msg)
+            QMessageBox.warning(self, t("common.disk_space"), space_msg)
             return
 
         config = CompressionConfig(
@@ -155,8 +157,8 @@ class CompressWidget(QWidget):
 
         if result.already_small:
             QMessageBox.information(
-                self, "Already Small",
-                f"File is already smaller than your target size."
+                self, t("compress.already_small_title"),
+                t("compress.already_small_short"),
             )
             self._progress.reset()
             return
@@ -164,22 +166,19 @@ class CompressWidget(QWidget):
         if result.text_only:
             self._result_card.show_result(
                 result.original_size, result.compressed_size, result.output_path,
-                title="Lossless Optimization Applied",
+                title=t("compress.lossless_title"),
             )
             QMessageBox.information(
-                self, "Text-Only PDF",
-                "This PDF has no images. Only lossless optimization was applied.\n"
-                "Further compression is not possible for text-only PDFs."
+                self, t("compress.text_only_title"),
+                t("compress.text_only_msg"),
             )
             return
 
         if result.target_impossible:
             min_mb = result.minimum_achievable_size / (1024 * 1024)
             QMessageBox.warning(
-                self, "Target Too Small",
-                f"Cannot compress to your target size.\n\n"
-                f"The minimum achievable size is {min_mb:.1f} MB.\n"
-                f"Try setting a larger target."
+                self, t("compress.target_too_small_title"),
+                t("compress.target_too_small_msg", min_size=f"{min_mb:.1f}"),
             )
             self._progress.reset()
             return
@@ -189,14 +188,14 @@ class CompressWidget(QWidget):
                 result.original_size, result.compressed_size, result.output_path,
             )
         else:
-            QMessageBox.critical(self, "Error", result.error_message or "Compression failed.")
+            QMessageBox.critical(self, t("common.error"), result.error_message or t("compress.failed"))
             self._progress.reset()
 
     def _on_compress_error(self, error_msg: str):
         self._progress.reset()
         self._compress_btn.setEnabled(True)
         self._worker = None
-        QMessageBox.critical(self, "Error", error_msg)
+        QMessageBox.critical(self, t("common.error"), error_msg)
 
     def _on_cancel_clicked(self):
         if self._worker:

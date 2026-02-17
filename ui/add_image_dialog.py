@@ -11,6 +11,7 @@ from PyQt6.QtCore import Qt, pyqtSignal
 from PyQt6.QtGui import QImage, QPixmap, QMouseEvent
 
 from core.page_manager import PageSource, PageManager, ImageAnnotation
+from i18n import t
 
 
 class _ClickableImagePreview(QLabel):
@@ -38,7 +39,7 @@ class AddImageDialog(QDialog):
 
     def __init__(self, source: PageSource, parent=None):
         super().__init__(parent)
-        self.setWindowTitle("Add Image Overlay")
+        self.setWindowTitle(t("add_image.title"))
         self.setMinimumSize(700, 600)
         self.resize(700, 600)
         self.setModal(True)
@@ -61,7 +62,7 @@ class AddImageDialog(QDialog):
         layout.setContentsMargins(16, 16, 16, 16)
         layout.setSpacing(10)
 
-        hint = QLabel("Click on the page to set image position, or use a preset")
+        hint = QLabel(t("add_image.hint"))
         hint.setStyleSheet("color: #666; font-size: 12px;")
         hint.setAlignment(Qt.AlignmentFlag.AlignCenter)
         layout.addWidget(hint)
@@ -78,11 +79,11 @@ class AddImageDialog(QDialog):
         img_row = QHBoxLayout()
         img_row.setSpacing(8)
 
-        self._img_label = QLabel("No image selected")
+        self._img_label = QLabel(t("add_image.no_image"))
         self._img_label.setStyleSheet("color: #666; font-size: 12px;")
         img_row.addWidget(self._img_label, 1)
 
-        browse_btn = QPushButton("Browse Image...")
+        browse_btn = QPushButton(t("add_image.browse"))
         browse_btn.setProperty("class", "secondaryButton")
         browse_btn.clicked.connect(self._on_browse_image)
         img_row.addWidget(browse_btn)
@@ -93,13 +94,14 @@ class AddImageDialog(QDialog):
         controls = QHBoxLayout()
         controls.setSpacing(12)
 
-        controls.addWidget(QLabel("Position:"))
+        controls.addWidget(QLabel(t("add_image.position")))
         self._position_combo = QComboBox()
-        self._position_combo.addItems(["Custom (click)", "Center", "Top-Left", "Top-Right", "Bottom-Left", "Bottom-Right"])
+        for _pname, _pkey in [("Custom (click)", "Custom (click)"), ("Center", "Center"), ("Top-Left", "Top Left"), ("Top-Right", "Top Right"), ("Bottom-Left", "Bottom Left"), ("Bottom-Right", "Bottom Right")]:
+            self._position_combo.addItem(t(f"position.{_pkey}") if _pkey != "Custom (click)" else t("add_image.custom"), _pname)
         self._position_combo.currentIndexChanged.connect(self._on_position_preset)
         controls.addWidget(self._position_combo)
 
-        controls.addWidget(QLabel("Scale:"))
+        controls.addWidget(QLabel(t("add_image.scale")))
         self._scale_slider = QSlider(Qt.Orientation.Horizontal)
         self._scale_slider.setRange(5, 100)
         self._scale_slider.setValue(25)
@@ -116,12 +118,12 @@ class AddImageDialog(QDialog):
         btn_row = QHBoxLayout()
         btn_row.addStretch()
 
-        cancel_btn = QPushButton("Cancel")
+        cancel_btn = QPushButton(t("common.cancel"))
         cancel_btn.setProperty("class", "secondaryButton")
         cancel_btn.clicked.connect(self.reject)
         btn_row.addWidget(cancel_btn)
 
-        self._apply_btn = QPushButton("Apply Image")
+        self._apply_btn = QPushButton(t("add_image.apply"))
         self._apply_btn.setObjectName("primaryButton")
         self._apply_btn.setEnabled(False)
         self._apply_btn.clicked.connect(self._on_apply)
@@ -135,7 +137,7 @@ class AddImageDialog(QDialog):
 
     def _on_browse_image(self):
         path, _ = QFileDialog.getOpenFileName(
-            self, "Select Image", "",
+            self, t("add_image.select_dialog"), "",
             "Images (*.png *.jpg *.jpeg *.bmp *.tiff *.tif *.webp)",
         )
         if not path:
@@ -147,7 +149,7 @@ class AddImageDialog(QDialog):
             self._overlay_img = Image.open(path).convert("RGBA")
         except Exception:
             self._overlay_img = None
-            self._img_label.setText("Error loading image")
+            self._img_label.setText(t("add_image.error_loading"))
             return
 
         self._apply_btn.setEnabled(True)

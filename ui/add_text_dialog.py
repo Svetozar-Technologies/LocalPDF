@@ -11,6 +11,7 @@ from PyQt6.QtCore import Qt, pyqtSignal
 from PyQt6.QtGui import QImage, QPixmap, QMouseEvent
 
 from core.page_manager import PageSource, PageManager, TextAnnotation
+from i18n import t
 
 
 class _ClickablePreview(QLabel):
@@ -39,7 +40,7 @@ class AddTextDialog(QDialog):
 
     def __init__(self, source: PageSource, parent=None):
         super().__init__(parent)
-        self.setWindowTitle("Add Text Annotation")
+        self.setWindowTitle(t("add_text.title"))
         self.setMinimumSize(700, 600)
         self.resize(700, 600)
         self.setModal(True)
@@ -59,7 +60,7 @@ class AddTextDialog(QDialog):
         layout.setContentsMargins(16, 16, 16, 16)
         layout.setSpacing(10)
 
-        hint = QLabel("Click on the page to set text position")
+        hint = QLabel(t("add_text.hint"))
         hint.setStyleSheet("color: #666; font-size: 12px;")
         hint.setAlignment(Qt.AlignmentFlag.AlignCenter)
         layout.addWidget(hint)
@@ -76,22 +77,23 @@ class AddTextDialog(QDialog):
         controls = QHBoxLayout()
         controls.setSpacing(8)
 
-        controls.addWidget(QLabel("Text:"))
+        controls.addWidget(QLabel(t("add_text.text_label")))
         self._text_input = QLineEdit()
-        self._text_input.setPlaceholderText("Enter text...")
+        self._text_input.setPlaceholderText(t("add_text.text_placeholder"))
         self._text_input.textChanged.connect(self._update_preview)
         controls.addWidget(self._text_input, 1)
 
-        controls.addWidget(QLabel("Size:"))
+        controls.addWidget(QLabel(t("add_text.size_label")))
         self._size_spin = QSpinBox()
         self._size_spin.setRange(10, 72)
         self._size_spin.setValue(14)
         self._size_spin.valueChanged.connect(self._update_preview)
         controls.addWidget(self._size_spin)
 
-        controls.addWidget(QLabel("Color:"))
+        controls.addWidget(QLabel(t("add_text.color_label")))
         self._color_combo = QComboBox()
-        self._color_combo.addItems(["Black", "Red", "Blue", "Green"])
+        for _cname in ["Black", "Red", "Blue", "Green"]:
+            self._color_combo.addItem(t(f"color.{_cname}"), _cname)
         self._color_combo.currentIndexChanged.connect(self._update_preview)
         controls.addWidget(self._color_combo)
 
@@ -101,12 +103,12 @@ class AddTextDialog(QDialog):
         btn_row = QHBoxLayout()
         btn_row.addStretch()
 
-        cancel_btn = QPushButton("Cancel")
+        cancel_btn = QPushButton(t("common.cancel"))
         cancel_btn.setProperty("class", "secondaryButton")
         cancel_btn.clicked.connect(self.reject)
         btn_row.addWidget(cancel_btn)
 
-        self._apply_btn = QPushButton("Apply Text")
+        self._apply_btn = QPushButton(t("add_text.apply"))
         self._apply_btn.setObjectName("primaryButton")
         self._apply_btn.clicked.connect(self._on_apply)
         btn_row.addWidget(self._apply_btn)
@@ -129,7 +131,7 @@ class AddTextDialog(QDialog):
             "Blue": (0.0, 0.0, 1.0),
             "Green": (0.0, 0.5, 0.0),
         }
-        return colors.get(self._color_combo.currentText(), (0.0, 0.0, 0.0))
+        return colors.get(self._color_combo.currentData(), (0.0, 0.0, 0.0))
 
     def _update_preview(self):
         if self._base_img is None:

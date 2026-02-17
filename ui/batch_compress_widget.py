@@ -13,6 +13,7 @@ from ui.components.progress_widget import ProgressWidget
 from ui.components.result_card import ResultCard
 from workers.batch_compress_worker import BatchCompressWorker
 from core.utils import validate_pdf, format_file_size
+from i18n import t
 
 
 class BatchCompressWidget(QWidget):
@@ -34,18 +35,18 @@ class BatchCompressWidget(QWidget):
         layout.setContentsMargins(32, 24, 32, 24)
         layout.setSpacing(16)
 
-        title = QLabel("Batch Compress")
+        title = QLabel(t("batch_compress.title"))
         title.setProperty("class", "sectionTitle")
         layout.addWidget(title)
 
-        subtitle = QLabel("Compress multiple PDFs at once to a target size. 100% local processing.")
+        subtitle = QLabel(t("batch_compress.subtitle"))
         subtitle.setProperty("class", "sectionSubtitle")
         subtitle.setWordWrap(True)
         layout.addWidget(subtitle)
 
         self._drop_zone = MultiDropZone(
             accepted_extensions=[".pdf"],
-            placeholder_text="Drop PDF files here or click to browse",
+            placeholder_text=t("batch_compress.drop_text"),
         )
         layout.addWidget(self._drop_zone)
 
@@ -55,7 +56,7 @@ class BatchCompressWidget(QWidget):
         self._size_input = FileSizeInput()
         layout.addWidget(self._size_input)
 
-        self._compress_btn = QPushButton("Compress All")
+        self._compress_btn = QPushButton(t("batch_compress.button"))
         self._compress_btn.setObjectName("primaryButton")
         self._compress_btn.setEnabled(False)
         layout.addWidget(self._compress_btn)
@@ -97,8 +98,8 @@ class BatchCompressWidget(QWidget):
 
         if errors:
             QMessageBox.warning(
-                self, "Some Files Skipped",
-                "The following files were skipped:\n\n" + "\n".join(errors),
+                self, t("common.some_files_skipped"),
+                t("common.files_skipped_msg", errors="\n".join(errors)),
             )
 
     def _update_button_state(self):
@@ -160,19 +161,19 @@ class BatchCompressWidget(QWidget):
                 result.total_original_size,
                 result.total_compressed_size,
                 output_folder,
-                title=f"Batch Complete: {result.succeeded}/{result.total_files} files saved to compressed/",
+                title=t("batch_compress.complete", succeeded=result.succeeded, total=result.total_files),
             )
         else:
             self._result_card.show_simple_result(
                 output_folder,
-                title=f"Batch Complete: {result.succeeded} succeeded, {result.failed} failed",
+                title=t("batch_compress.complete_mixed", succeeded=result.succeeded, failed=result.failed),
             )
 
     def _on_batch_error(self, error_msg: str):
         self._progress.reset()
         self._compress_btn.setEnabled(True)
         self._worker = None
-        QMessageBox.critical(self, "Error", error_msg)
+        QMessageBox.critical(self, t("common.error"), error_msg)
 
     def _on_cancel_clicked(self):
         if self._worker:

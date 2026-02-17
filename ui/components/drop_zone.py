@@ -11,6 +11,7 @@ from PyQt6.QtCore import Qt, pyqtSignal
 from PyQt6.QtGui import QDragEnterEvent, QDropEvent, QPainter, QPen, QColor
 
 from core.utils import format_file_size
+from i18n import t
 
 
 class DropZone(QWidget):
@@ -70,7 +71,7 @@ class DropZone(QWidget):
 
         file_layout.addStretch()
 
-        self._remove_btn = QPushButton("Remove")
+        self._remove_btn = QPushButton(t("common.remove"))
         self._remove_btn.setProperty("class", "secondaryButton")
         self._remove_btn.clicked.connect(self.reset)
         file_layout.addWidget(self._remove_btn)
@@ -111,7 +112,7 @@ class DropZone(QWidget):
     def _browse_file(self):
         exts = " ".join(f"*{e}" for e in self._accepted_extensions)
         file_filter = f"Supported Files ({exts})"
-        path, _ = QFileDialog.getOpenFileName(self, "Select File", "", file_filter)
+        path, _ = QFileDialog.getOpenFileName(self, t("common.select_file"), "", file_filter)
         if path:
             self._set_file(path)
 

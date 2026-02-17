@@ -12,6 +12,7 @@ from ui.components.progress_widget import ProgressWidget
 from ui.components.result_card import ResultCard
 from workers.merge_worker import MergeWorker
 from core.utils import validate_pdf, get_output_path, format_file_size, check_disk_space
+from i18n import t
 
 
 class MergeWidget(QWidget):
@@ -33,25 +34,25 @@ class MergeWidget(QWidget):
         layout.setContentsMargins(32, 24, 32, 24)
         layout.setSpacing(16)
 
-        title = QLabel("Merge PDFs")
+        title = QLabel(t("merge.title"))
         title.setProperty("class", "sectionTitle")
         layout.addWidget(title)
 
-        subtitle = QLabel("Combine multiple PDF files into a single document. Drag to reorder.")
+        subtitle = QLabel(t("merge.subtitle"))
         subtitle.setProperty("class", "sectionSubtitle")
         subtitle.setWordWrap(True)
         layout.addWidget(subtitle)
 
         self._drop_zone = MultiDropZone(
             accepted_extensions=[".pdf"],
-            placeholder_text="Drop PDF files here or click to browse",
+            placeholder_text=t("merge.drop_text"),
         )
         layout.addWidget(self._drop_zone)
 
         self._file_list = FileListWidget(show_status=False)
         layout.addWidget(self._file_list)
 
-        self._merge_btn = QPushButton("Merge PDFs")
+        self._merge_btn = QPushButton(t("merge.button"))
         self._merge_btn.setObjectName("primaryButton")
         self._merge_btn.setEnabled(False)
         layout.addWidget(self._merge_btn)
@@ -93,8 +94,8 @@ class MergeWidget(QWidget):
 
         if errors:
             QMessageBox.warning(
-                self, "Some Files Skipped",
-                "The following files were skipped:\n\n" + "\n".join(errors),
+                self, t("common.some_files_skipped"),
+                t("common.files_skipped_msg", errors="\n".join(errors)),
             )
 
     def _update_button_state(self):
@@ -111,7 +112,7 @@ class MergeWidget(QWidget):
         total_size = sum(os.path.getsize(p) for p in paths)
         has_space, space_msg = check_disk_space(os.path.dirname(output_path), total_size)
         if not has_space:
-            QMessageBox.warning(self, "Disk Space", space_msg)
+            QMessageBox.warning(self, t("common.disk_space"), space_msg)
             return
 
         self._merge_btn.setEnabled(False)
@@ -136,17 +137,17 @@ class MergeWidget(QWidget):
         if result.success:
             self._result_card.show_simple_result(
                 result.output_path,
-                title=f"Merged! {result.total_pages} pages, {format_file_size(result.output_size)}",
+                title=t("merge.complete", pages=result.total_pages, size=format_file_size(result.output_size)),
             )
         else:
-            QMessageBox.critical(self, "Error", result.error_message or "Merge failed.")
+            QMessageBox.critical(self, t("common.error"), result.error_message or t("merge.failed"))
             self._progress.reset()
 
     def _on_merge_error(self, error_msg: str):
         self._progress.reset()
         self._merge_btn.setEnabled(True)
         self._worker = None
-        QMessageBox.critical(self, "Error", error_msg)
+        QMessageBox.critical(self, t("common.error"), error_msg)
 
     def _on_cancel_clicked(self):
         if self._worker:

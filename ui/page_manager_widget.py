@@ -12,6 +12,7 @@ from PyQt6.QtWidgets import (
 from PyQt6.QtCore import Qt, pyqtSignal, QMimeData, QPoint
 from PyQt6.QtGui import QImage, QPixmap, QDrag
 
+from i18n import t
 from ui.components.drop_zone import DropZone
 from ui.components.progress_widget import ProgressWidget
 from ui.components.result_card import ResultCard
@@ -70,7 +71,7 @@ class _PageThumbnail(QFrame):
         self._badge_label.hide()
         info_row.addWidget(self._badge_label)
 
-        self._page_label = QLabel("Page 1")
+        self._page_label = QLabel(t("page_manager.page_label", number=1))
         self._page_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
         self._page_label.setStyleSheet("font-size: 11px; color: #666;")
         info_row.addWidget(self._page_label, 1)
@@ -96,11 +97,11 @@ class _PageThumbnail(QFrame):
 
     def _update_badge(self):
         if self._source.source_type == PageSourceType.EXTERNAL:
-            self._badge_label.setText("EXT")
+            self._badge_label.setText(t("page_manager.ext_badge"))
             self._badge_label.setStyleSheet("font-size: 9px; color: white; background: #FF5722; border-radius: 3px; padding: 1px;")
             self._badge_label.show()
         elif self._source.source_type == PageSourceType.BLANK:
-            self._badge_label.setText("NEW")
+            self._badge_label.setText(t("page_manager.new_badge"))
             self._badge_label.setStyleSheet("font-size: 9px; color: white; background: #4CAF50; border-radius: 3px; padding: 1px;")
             self._badge_label.show()
         else:
@@ -110,7 +111,7 @@ class _PageThumbnail(QFrame):
         has_ann = bool(self._source.text_annotations or self._source.image_annotations)
         if has_ann:
             count = len(self._source.text_annotations) + len(self._source.image_annotations)
-            self._ann_label.setText(f"\u270E{count}")
+            self._ann_label.setText(t("page_manager.annotation_count_plural", count=count) if count != 1 else t("page_manager.annotation_count", count=count))
             self._ann_label.show()
         else:
             self._ann_label.hide()
@@ -161,7 +162,7 @@ class _PageThumbnail(QFrame):
             self.setStyleSheet("")
 
     def update_label(self, position: int):
-        self._page_label.setText(f"Page {position + 1}")
+        self._page_label.setText(t("page_manager.page_label", number=position + 1))
 
     def mousePressEvent(self, event):
         if event.button() == Qt.MouseButton.LeftButton:
@@ -220,11 +221,11 @@ class PageManagerWidget(QWidget):
         layout.setSpacing(16)
 
         # Title
-        title = QLabel("PDF Page Editor")
+        title = QLabel(t("page_manager.title"))
         title.setProperty("class", "sectionTitle")
         layout.addWidget(title)
 
-        subtitle = QLabel("Edit, reorder, rotate, annotate, erase, and extract PDF pages. 100% local processing.")
+        subtitle = QLabel(t("page_manager.subtitle"))
         subtitle.setProperty("class", "sectionSubtitle")
         subtitle.setWordWrap(True)
         layout.addWidget(subtitle)
@@ -232,7 +233,7 @@ class PageManagerWidget(QWidget):
         # Drop zone
         self._drop_zone = DropZone(
             accepted_extensions=[".pdf"],
-            placeholder_text="Drop a PDF file here or click to browse",
+            placeholder_text=t("page_manager.drop_text"),
         )
         layout.addWidget(self._drop_zone)
 
@@ -245,28 +246,28 @@ class PageManagerWidget(QWidget):
         row1 = QHBoxLayout()
         row1.setSpacing(8)
 
-        self._rotate_left_btn = QPushButton("\u21BA Rotate Left")
+        self._rotate_left_btn = QPushButton(t("page_manager.rotate_left"))
         self._rotate_left_btn.setProperty("class", "secondaryButton")
-        self._rotate_left_btn.setToolTip("Rotate selected pages 90\u00B0 counter-clockwise")
+        self._rotate_left_btn.setToolTip(t("page_manager.rotate_left_tip"))
         row1.addWidget(self._rotate_left_btn)
 
-        self._rotate_right_btn = QPushButton("\u21BB Rotate Right")
+        self._rotate_right_btn = QPushButton(t("page_manager.rotate_right"))
         self._rotate_right_btn.setProperty("class", "secondaryButton")
-        self._rotate_right_btn.setToolTip("Rotate selected pages 90\u00B0 clockwise")
+        self._rotate_right_btn.setToolTip(t("page_manager.rotate_right_tip"))
         row1.addWidget(self._rotate_right_btn)
 
-        self._delete_btn = QPushButton("\u2715 Delete")
+        self._delete_btn = QPushButton(t("page_manager.delete"))
         self._delete_btn.setProperty("class", "secondaryButton")
-        self._delete_btn.setToolTip("Remove selected pages")
+        self._delete_btn.setToolTip(t("page_manager.delete_tip"))
         row1.addWidget(self._delete_btn)
 
-        self._select_all_btn = QPushButton("Select All")
+        self._select_all_btn = QPushButton(t("page_manager.select_all"))
         self._select_all_btn.setProperty("class", "secondaryButton")
         row1.addWidget(self._select_all_btn)
 
-        self._view_toggle_btn = QPushButton("\u2630 Edit View")
+        self._view_toggle_btn = QPushButton(t("page_manager.edit_view"))
         self._view_toggle_btn.setProperty("class", "secondaryButton")
-        self._view_toggle_btn.setToolTip("Toggle between grid thumbnails and continuous edit view")
+        self._view_toggle_btn.setToolTip(t("page_manager.edit_view_tip"))
         row1.addWidget(self._view_toggle_btn)
 
         row1.addStretch()
@@ -274,13 +275,13 @@ class PageManagerWidget(QWidget):
         self._move_left_btn = QPushButton("\u25C0")
         self._move_left_btn.setProperty("class", "secondaryButton")
         self._move_left_btn.setFixedWidth(36)
-        self._move_left_btn.setToolTip("Move selected page left")
+        self._move_left_btn.setToolTip(t("page_manager.move_left_tip"))
         row1.addWidget(self._move_left_btn)
 
         self._move_right_btn = QPushButton("\u25B6")
         self._move_right_btn.setProperty("class", "secondaryButton")
         self._move_right_btn.setFixedWidth(36)
-        self._move_right_btn.setToolTip("Move selected page right")
+        self._move_right_btn.setToolTip(t("page_manager.move_right_tip"))
         row1.addWidget(self._move_right_btn)
 
         toolbar_v.addLayout(row1)
@@ -289,51 +290,51 @@ class PageManagerWidget(QWidget):
         row2 = QHBoxLayout()
         row2.setSpacing(8)
 
-        self._insert_pages_btn = QPushButton("\u2795 Insert Pages")
+        self._insert_pages_btn = QPushButton(t("page_manager.insert_pages"))
         self._insert_pages_btn.setProperty("class", "secondaryButton")
-        self._insert_pages_btn.setToolTip("Insert pages from another PDF")
+        self._insert_pages_btn.setToolTip(t("page_manager.insert_pages_tip"))
         row2.addWidget(self._insert_pages_btn)
 
-        self._insert_blank_btn = QPushButton("\u2B1C Insert Blank")
+        self._insert_blank_btn = QPushButton(t("page_manager.insert_blank"))
         self._insert_blank_btn.setProperty("class", "secondaryButton")
-        self._insert_blank_btn.setToolTip("Insert a blank A4 page")
+        self._insert_blank_btn.setToolTip(t("page_manager.insert_blank_tip"))
         row2.addWidget(self._insert_blank_btn)
 
-        self._duplicate_btn = QPushButton("\u2398 Duplicate")
+        self._duplicate_btn = QPushButton(t("page_manager.duplicate"))
         self._duplicate_btn.setProperty("class", "secondaryButton")
-        self._duplicate_btn.setToolTip("Duplicate selected pages")
+        self._duplicate_btn.setToolTip(t("page_manager.duplicate_tip"))
         row2.addWidget(self._duplicate_btn)
 
-        self._extract_btn = QPushButton("\u2197 Extract")
+        self._extract_btn = QPushButton(t("page_manager.extract"))
         self._extract_btn.setProperty("class", "secondaryButton")
-        self._extract_btn.setToolTip("Extract selected pages to a new PDF")
+        self._extract_btn.setToolTip(t("page_manager.extract_tip"))
         row2.addWidget(self._extract_btn)
 
         row2.addStretch()
 
-        self._add_text_btn = QPushButton("\U0001D5A0 Add Text")
+        self._add_text_btn = QPushButton(t("page_manager.add_text"))
         self._add_text_btn.setProperty("class", "secondaryButton")
-        self._add_text_btn.setToolTip("Add text annotation to selected pages")
+        self._add_text_btn.setToolTip(t("page_manager.add_text_tip"))
         row2.addWidget(self._add_text_btn)
 
-        self._add_image_btn = QPushButton("\U0001F5BC Add Image")
+        self._add_image_btn = QPushButton(t("page_manager.add_image"))
         self._add_image_btn.setProperty("class", "secondaryButton")
-        self._add_image_btn.setToolTip("Add image overlay to selected pages")
+        self._add_image_btn.setToolTip(t("page_manager.add_image_tip"))
         row2.addWidget(self._add_image_btn)
 
-        self._sign_btn = QPushButton("\u270D Sign")
+        self._sign_btn = QPushButton(t("page_manager.sign"))
         self._sign_btn.setProperty("class", "secondaryButton")
-        self._sign_btn.setToolTip("Draw or upload a signature and place it on selected pages")
+        self._sign_btn.setToolTip(t("page_manager.sign_tip"))
         row2.addWidget(self._sign_btn)
 
-        self._manage_ann_btn = QPushButton("\u270E Annotations")
+        self._manage_ann_btn = QPushButton(t("page_manager.annotations"))
         self._manage_ann_btn.setProperty("class", "secondaryButton")
-        self._manage_ann_btn.setToolTip("Manage and delete annotations on the selected page")
+        self._manage_ann_btn.setToolTip(t("page_manager.annotations_tip"))
         row2.addWidget(self._manage_ann_btn)
 
-        self._eraser_btn = QPushButton("\u2702 Eraser")
+        self._eraser_btn = QPushButton(t("page_manager.eraser"))
         self._eraser_btn.setProperty("class", "secondaryButton")
-        self._eraser_btn.setToolTip("Erase (white-out) content on the selected page")
+        self._eraser_btn.setToolTip(t("page_manager.eraser_tip"))
         row2.addWidget(self._eraser_btn)
 
         toolbar_v.addLayout(row2)
@@ -370,7 +371,7 @@ class PageManagerWidget(QWidget):
         layout.addWidget(self._edit_view)
 
         # Save button
-        self._save_btn = QPushButton("Save PDF")
+        self._save_btn = QPushButton(t("page_manager.save_btn"))
         self._save_btn.setObjectName("primaryButton")
         self._save_btn.setEnabled(False)
         self._save_btn.hide()
@@ -422,7 +423,7 @@ class PageManagerWidget(QWidget):
     def _on_file_selected(self, file_path: str):
         result = validate_pdf(file_path)
         if not result.valid:
-            QMessageBox.warning(self, "Invalid File", result.error_message)
+            QMessageBox.warning(self, t("common.invalid_file"), result.error_message)
             self._drop_zone.reset()
             return
 
@@ -449,7 +450,7 @@ class PageManagerWidget(QWidget):
         self._edit_view.hide()
         self._edit_view.cleanup()
         self._current_view = "grid"
-        self._view_toggle_btn.setText("\u2630 Edit View")
+        self._view_toggle_btn.setText(t("page_manager.edit_view"))
         self._save_btn.hide()
         self._save_btn.setEnabled(False)
         self._selection_label.hide()
@@ -487,7 +488,7 @@ class PageManagerWidget(QWidget):
 
     def _on_thumbnail_error(self, error_msg: str):
         self._thumbnail_worker = None
-        QMessageBox.critical(self, "Error", f"Failed to render thumbnails: {error_msg}")
+        QMessageBox.critical(self, t("common.error"), t("page_manager.thumbnail_error", error=str(error_msg)))
 
     # ------------------------------------------------------------------ Grid layout
 
@@ -572,7 +573,7 @@ class PageManagerWidget(QWidget):
         if count == 0:
             self._selection_label.hide()
         else:
-            self._selection_label.setText(f"{count} page{'s' if count != 1 else ''} selected")
+            self._selection_label.setText(t("page_manager.pages_selected_plural", count=count) if count != 1 else t("page_manager.pages_selected", count=count))
             self._selection_label.show()
 
     def _on_select_all(self):
@@ -612,7 +613,7 @@ class PageManagerWidget(QWidget):
 
         remaining = len(self._cells) - len(self._selected_ids)
         if remaining == 0:
-            QMessageBox.warning(self, "Cannot Delete", "You cannot delete all pages. At least one page must remain.")
+            QMessageBox.warning(self, t("page_manager.cannot_delete"), t("page_manager.cannot_delete_msg"))
             return
 
         positions = sorted(self._selected_positions(), reverse=True)
@@ -747,10 +748,10 @@ class PageManagerWidget(QWidget):
         if result.success:
             self._result_card.show_simple_result(
                 result.output_path,
-                title=f"Extracted! {result.total_pages} pages",
+                title=t("page_manager.extracted", pages=result.total_pages),
             )
         else:
-            QMessageBox.critical(self, "Error", result.error_message)
+            QMessageBox.critical(self, t("common.error"), result.error_message)
             self._progress.reset()
 
     def _on_insert_pages(self):
@@ -881,7 +882,7 @@ class PageManagerWidget(QWidget):
         source = first_cell.source
 
         if not source.text_annotations and not source.image_annotations:
-            QMessageBox.information(self, "No Annotations", "This page has no annotations to manage.")
+            QMessageBox.information(self, t("page_manager.no_annotations"), t("page_manager.no_annotations_msg"))
             return
 
         from ui.manage_annotations_dialog import ManageAnnotationsDialog
@@ -923,7 +924,7 @@ class PageManagerWidget(QWidget):
     def _on_toggle_view(self):
         if self._current_view == "grid":
             self._current_view = "edit"
-            self._view_toggle_btn.setText("\u2637 Grid View")
+            self._view_toggle_btn.setText(t("page_manager.grid_view"))
             self._grid_scroll.hide()
             sources = [cell.source for cell in self._cells]
             self._edit_view.rebuild_from_sources(sources)
@@ -933,7 +934,7 @@ class PageManagerWidget(QWidget):
             self._edit_view.set_selection(selected_positions)
         else:
             self._current_view = "grid"
-            self._view_toggle_btn.setText("\u2630 Edit View")
+            self._view_toggle_btn.setText(t("page_manager.edit_view"))
             self._edit_view.hide()
             self._grid_scroll.show()
             self._relayout_grid()
@@ -1047,17 +1048,17 @@ class PageManagerWidget(QWidget):
         if result.success:
             self._result_card.show_simple_result(
                 result.output_path,
-                title=f"Saved! {result.total_pages} pages",
+                title=t("page_manager.saved", pages=result.total_pages),
             )
         else:
-            QMessageBox.critical(self, "Error", result.error_message)
+            QMessageBox.critical(self, t("common.error"), result.error_message)
             self._progress.reset()
 
     def _on_save_error(self, error_msg: str):
         self._progress.reset()
         self._save_btn.setEnabled(True)
         self._save_worker = None
-        QMessageBox.critical(self, "Error", error_msg)
+        QMessageBox.critical(self, t("common.error"), error_msg)
 
     # ------------------------------------------------------------------ Cancel / Reset
 
@@ -1077,7 +1078,7 @@ class PageManagerWidget(QWidget):
         self._edit_view.hide()
         self._edit_view.cleanup()
         self._current_view = "grid"
-        self._view_toggle_btn.setText("\u2630 Edit View")
+        self._view_toggle_btn.setText(t("page_manager.edit_view"))
         self._save_btn.hide()
         self._selection_label.hide()
         self._result_card.reset()

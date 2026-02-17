@@ -19,6 +19,7 @@ from ui.convert_widget import ConvertWidget
 from ui.page_manager_widget import PageManagerWidget
 from ui.settings_widget import SettingsWidget
 from ui.theme import ThemeManager
+from i18n import t
 
 
 class MainWindow(QMainWindow):
@@ -88,28 +89,28 @@ class MainWindow(QMainWindow):
         layout.setSpacing(0)
 
         # App title
-        title = QLabel("LocalPDF")
+        title = QLabel(t("app.title"))
         title.setObjectName("appTitle")
         layout.addWidget(title)
 
-        subtitle = QLabel("100% Local Processing")
+        subtitle = QLabel(t("app.subtitle"))
         subtitle.setObjectName("appSubtitle")
         layout.addWidget(subtitle)
 
         layout.addSpacing(4)
 
         # --- PDF Tools section ---
-        section1 = QLabel("  PDF TOOLS")
+        section1 = QLabel("  " + t("sidebar.pdf_tools"))
         section1.setObjectName("sidebarSection")
         layout.addWidget(section1)
 
         pdf_tools = [
-            ("\U0001F4E6  Compress PDF", 0),
-            ("\U0001F4DA  Batch Compress", 1),
-            ("\U0001F517  Merge PDFs", 2),
-            ("\U00002702  Split PDF", 3),
-            ("\U0001F512  Protect / Unlock", 4),
-            ("\U0001F4A7  Watermark", 5),
+            (t("sidebar.compress"), 0),
+            (t("sidebar.batch_compress"), 1),
+            (t("sidebar.merge"), 2),
+            (t("sidebar.split"), 3),
+            (t("sidebar.protect"), 4),
+            (t("sidebar.watermark"), 5),
         ]
 
         for label, index in pdf_tools:
@@ -122,14 +123,14 @@ class MainWindow(QMainWindow):
             self._nav_buttons.append(btn)
 
         # --- Convert section ---
-        section2 = QLabel("  CONVERT")
+        section2 = QLabel("  " + t("sidebar.convert"))
         section2.setObjectName("sidebarSection")
         layout.addWidget(section2)
 
         convert_tools = [
-            ("\U0001F5BC  Image to PDF", 6),
-            ("\U0001F4F7  PDF to Image", 7),
-            ("\U0001F4CA  Convert PPT", 8),
+            (t("sidebar.image_to_pdf"), 6),
+            (t("sidebar.pdf_to_image"), 7),
+            (t("sidebar.convert_ppt"), 8),
         ]
 
         for label, index in convert_tools:
@@ -142,12 +143,12 @@ class MainWindow(QMainWindow):
             self._nav_buttons.append(btn)
 
         # --- Page Tools section ---
-        section3 = QLabel("  PAGE TOOLS")
+        section3 = QLabel("  " + t("sidebar.page_tools"))
         section3.setObjectName("sidebarSection")
         layout.addWidget(section3)
 
         page_tools = [
-            ("\U0001F4C4  PDF Page Editor", 9),
+            (t("sidebar.page_editor"), 9),
         ]
 
         for label, index in page_tools:
@@ -162,7 +163,7 @@ class MainWindow(QMainWindow):
         # --- Settings (at bottom) ---
         layout.addStretch()
 
-        settings_btn = QPushButton("\u2699\uFE0F  Settings")
+        settings_btn = QPushButton(t("sidebar.settings"))
         settings_btn.setProperty("class", "navButton")
         settings_btn.setFixedHeight(38)
         settings_btn.setCursor(Qt.CursorShape.PointingHandCursor)
@@ -171,7 +172,7 @@ class MainWindow(QMainWindow):
         self._nav_buttons.append(settings_btn)
 
         # Version
-        version = QLabel("v1.0.0")
+        version = QLabel(t("app.version"))
         version.setObjectName("versionLabel")
         layout.addWidget(version)
 
@@ -188,34 +189,34 @@ class MainWindow(QMainWindow):
         menu_bar = self.menuBar()
 
         # File menu
-        file_menu = menu_bar.addMenu("File")
-        quit_action = QAction("Quit", self)
+        file_menu = menu_bar.addMenu(t("menu.file"))
+        quit_action = QAction(t("menu.quit"), self)
         quit_action.setShortcut("Ctrl+Q")
         quit_action.triggered.connect(self.close)
         file_menu.addAction(quit_action)
 
         # View menu
-        view_menu = menu_bar.addMenu("View")
-        toggle_theme = QAction("Toggle Dark Mode", self)
+        view_menu = menu_bar.addMenu(t("menu.view"))
+        toggle_theme = QAction(t("menu.toggle_dark_mode"), self)
         toggle_theme.setShortcut("Ctrl+D")
         toggle_theme.triggered.connect(self._toggle_theme)
         view_menu.addAction(toggle_theme)
 
         # Navigate
-        nav_menu = menu_bar.addMenu("Navigate")
+        nav_menu = menu_bar.addMenu(t("menu.navigate"))
 
         nav_actions = [
-            ("Compress PDF", "Ctrl+1", 0),
-            ("Batch Compress", "Ctrl+2", 1),
-            ("Merge PDFs", "Ctrl+3", 2),
-            ("Split PDF", "Ctrl+4", 3),
-            ("Protect / Unlock", "Ctrl+5", 4),
-            ("Watermark", "Ctrl+6", 5),
-            ("Image to PDF", "Ctrl+7", 6),
-            ("PDF to Image", "Ctrl+8", 7),
-            ("Convert PPT", "Ctrl+9", 8),
-            ("PDF Page Editor", "Ctrl+0", 9),
-            ("Settings", "Ctrl+,", 10),
+            (t("compress.title"), "Ctrl+1", 0),
+            (t("batch_compress.title"), "Ctrl+2", 1),
+            (t("merge.title"), "Ctrl+3", 2),
+            (t("split.title"), "Ctrl+4", 3),
+            (t("protect.title"), "Ctrl+5", 4),
+            (t("watermark.title"), "Ctrl+6", 5),
+            (t("image_to_pdf.title"), "Ctrl+7", 6),
+            (t("pdf_to_image.title"), "Ctrl+8", 7),
+            (t("convert.title"), "Ctrl+9", 8),
+            (t("page_manager.title"), "Ctrl+0", 9),
+            (t("settings.title"), "Ctrl+,", 10),
         ]
 
         for label, shortcut, index in nav_actions:

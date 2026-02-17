@@ -16,6 +16,7 @@ from PyQt6.QtGui import (
 )
 
 from core.page_manager import PageSource, PageManager, ImageAnnotation
+from i18n import t
 
 
 # ---------------------------------------------------------------------------
@@ -142,7 +143,7 @@ class SignatureCanvas(QWidget):
         # Hint text if empty
         if self.is_empty() and self._current_path is None:
             painter.setPen(QColor(180, 180, 180))
-            painter.drawText(self.rect(), Qt.AlignmentFlag.AlignCenter, "Sign here")
+            painter.drawText(self.rect(), Qt.AlignmentFlag.AlignCenter, t("signature.sign_here"))
 
         # Draw strokes
         stroke_pen = QPen(self._pen_color, self._pen_width,
@@ -190,7 +191,7 @@ class SignatureDialog(QDialog):
 
     def __init__(self, source: PageSource, parent=None):
         super().__init__(parent)
-        self.setWindowTitle("Add Signature")
+        self.setWindowTitle(t("signature.title"))
         self.setMinimumSize(750, 700)
         self.resize(750, 700)
         self.setModal(True)
@@ -221,7 +222,7 @@ class SignatureDialog(QDialog):
         draw_layout = QVBoxLayout(draw_tab)
         draw_layout.setSpacing(8)
 
-        draw_hint = QLabel("Draw your signature below")
+        draw_hint = QLabel(t("signature.draw_hint"))
         draw_hint.setStyleSheet("color: #666; font-size: 12px;")
         draw_hint.setAlignment(Qt.AlignmentFlag.AlignCenter)
         draw_layout.addWidget(draw_hint)
@@ -234,12 +235,13 @@ class SignatureDialog(QDialog):
         canvas_controls.setSpacing(8)
 
         self._color_combo = QComboBox()
-        self._color_combo.addItems(["Black", "Blue", "Red"])
-        self._color_combo.currentTextChanged.connect(self._on_color_changed)
-        canvas_controls.addWidget(QLabel("Pen:"))
+        for _cname in ["Black", "Blue", "Red"]:
+            self._color_combo.addItem(t(f"color.{_cname}"), _cname)
+        self._color_combo.currentIndexChanged.connect(self._on_color_changed)
+        canvas_controls.addWidget(QLabel(t("signature.pen_label")))
         canvas_controls.addWidget(self._color_combo)
 
-        canvas_controls.addWidget(QLabel("Width:"))
+        canvas_controls.addWidget(QLabel(t("signature.width_label")))
         self._width_slider = QSlider(Qt.Orientation.Horizontal)
         self._width_slider.setRange(1, 8)
         self._width_slider.setValue(3)
@@ -249,7 +251,7 @@ class SignatureDialog(QDialog):
         )
         canvas_controls.addWidget(self._width_slider)
 
-        clear_btn = QPushButton("Clear")
+        clear_btn = QPushButton(t("signature.clear"))
         clear_btn.setProperty("class", "secondaryButton")
         clear_btn.clicked.connect(self._on_clear)
         canvas_controls.addWidget(clear_btn)
@@ -257,35 +259,35 @@ class SignatureDialog(QDialog):
         canvas_controls.addStretch()
         draw_layout.addLayout(canvas_controls)
 
-        self._tabs.addTab(draw_tab, "Draw Signature")
+        self._tabs.addTab(draw_tab, t("signature.tab_draw"))
 
         # -- Upload tab --
         upload_tab = QWidget()
         upload_layout = QVBoxLayout(upload_tab)
 
-        upload_hint = QLabel("Upload a signature image (PNG with transparency recommended)")
+        upload_hint = QLabel(t("signature.upload_hint"))
         upload_hint.setStyleSheet("color: #666; font-size: 12px;")
         upload_hint.setAlignment(Qt.AlignmentFlag.AlignCenter)
         upload_layout.addWidget(upload_hint)
 
-        self._upload_preview = QLabel("No image selected")
+        self._upload_preview = QLabel(t("signature.no_image"))
         self._upload_preview.setAlignment(Qt.AlignmentFlag.AlignCenter)
         self._upload_preview.setStyleSheet("color: #999; font-size: 13px; padding: 20px;")
         self._upload_preview.setMinimumHeight(100)
         upload_layout.addWidget(self._upload_preview, 1)
 
-        browse_btn = QPushButton("Browse Image...")
+        browse_btn = QPushButton(t("signature.browse"))
         browse_btn.setProperty("class", "secondaryButton")
         browse_btn.clicked.connect(self._on_browse_signature)
         upload_layout.addWidget(browse_btn, alignment=Qt.AlignmentFlag.AlignCenter)
 
-        self._tabs.addTab(upload_tab, "Upload Image")
+        self._tabs.addTab(upload_tab, t("signature.tab_upload"))
         self._tabs.currentChanged.connect(self._on_tab_changed)
 
         layout.addWidget(self._tabs)
 
         # Page preview with click-to-position
-        preview_label = QLabel("Click on the page below to set signature position")
+        preview_label = QLabel(t("signature.position_hint"))
         preview_label.setStyleSheet("color: #666; font-size: 12px;")
         preview_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
         layout.addWidget(preview_label)
@@ -301,15 +303,15 @@ class SignatureDialog(QDialog):
         controls = QHBoxLayout()
         controls.setSpacing(8)
 
-        controls.addWidget(QLabel("Position:"))
+        controls.addWidget(QLabel(t("signature.position_label")))
         self._position_combo = QComboBox()
-        self._position_combo.addItems([
-            "Custom (click)", "Bottom-Center", "Bottom-Left", "Bottom-Right",
-        ])
+        self._position_combo.addItem(t("signature.custom"), "Custom (click)")
+        for _pname in ["Bottom-Center", "Bottom-Left", "Bottom-Right"]:
+            self._position_combo.addItem(t(f"signature.{_pname}"), _pname)
         self._position_combo.currentIndexChanged.connect(self._on_position_preset)
         controls.addWidget(self._position_combo)
 
-        controls.addWidget(QLabel("Scale:"))
+        controls.addWidget(QLabel(t("signature.scale_label")))
         self._scale_slider = QSlider(Qt.Orientation.Horizontal)
         self._scale_slider.setRange(5, 60)
         self._scale_slider.setValue(25)
@@ -326,12 +328,12 @@ class SignatureDialog(QDialog):
         btn_row = QHBoxLayout()
         btn_row.addStretch()
 
-        cancel_btn = QPushButton("Cancel")
+        cancel_btn = QPushButton(t("common.cancel"))
         cancel_btn.setProperty("class", "secondaryButton")
         cancel_btn.clicked.connect(self.reject)
         btn_row.addWidget(cancel_btn)
 
-        self._apply_btn = QPushButton("Apply Signature")
+        self._apply_btn = QPushButton(t("signature.apply"))
         self._apply_btn.setObjectName("primaryButton")
         self._apply_btn.setEnabled(False)
         self._apply_btn.clicked.connect(self._on_apply)
@@ -350,13 +352,14 @@ class SignatureDialog(QDialog):
         self._apply_btn.setEnabled(self._signature_img is not None)
         self._update_preview()
 
-    def _on_color_changed(self, text: str):
+    def _on_color_changed(self, _index: int):
+        key = self._color_combo.currentData()
         colors = {
             "Black": QColor(0, 0, 0),
             "Blue": QColor(0, 0, 180),
             "Red": QColor(180, 0, 0),
         }
-        self._canvas.set_pen_color(colors.get(text, QColor(0, 0, 0)))
+        self._canvas.set_pen_color(colors.get(key, QColor(0, 0, 0)))
 
     def _on_clear(self):
         self._canvas.clear()
@@ -368,7 +371,7 @@ class SignatureDialog(QDialog):
 
     def _on_browse_signature(self):
         path, _ = QFileDialog.getOpenFileName(
-            self, "Select Signature Image", "",
+            self, t("add_image.select_dialog"), "",
             "Images (*.png *.jpg *.jpeg *.bmp *.tiff *.webp)",
         )
         if not path:
@@ -387,7 +390,7 @@ class SignatureDialog(QDialog):
             self._apply_btn.setEnabled(True)
             self._update_preview()
         except Exception:
-            self._upload_preview.setText("Error loading image")
+            self._upload_preview.setText(t("signature.error_loading"))
 
     def _on_tab_changed(self, index: int):
         # When switching tabs, clear the signature from the other tab

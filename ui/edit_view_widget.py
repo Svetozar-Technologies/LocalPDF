@@ -10,6 +10,7 @@ from PyQt6.QtCore import Qt, pyqtSignal, QTimer, QRect
 from PyQt6.QtGui import QImage, QPixmap, QMouseEvent
 
 from core.page_manager import PageSource
+from i18n import t
 
 
 # ---------------------------------------------------------------------------
@@ -50,7 +51,7 @@ class _EditPageCard(QFrame):
         self._image_label.setStyleSheet(
             "background: #f8f8f8; border: 1px solid #e0e0e0; border-radius: 2px;"
         )
-        self._image_label.setText("Loading...")
+        self._image_label.setText(t("page_manager.loading"))
         self._image_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
         layout.addWidget(self._image_label, alignment=Qt.AlignmentFlag.AlignCenter)
 
@@ -58,7 +59,7 @@ class _EditPageCard(QFrame):
         info_row = QHBoxLayout()
         info_row.setSpacing(8)
 
-        self._page_label = QLabel(f"Page {self._index + 1}")
+        self._page_label = QLabel(t("page_manager.page_label", number=self._index + 1))
         self._page_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
         self._page_label.setStyleSheet("font-size: 12px; color: #666; padding: 2px;")
         info_row.addWidget(self._page_label, 1)
@@ -80,7 +81,7 @@ class _EditPageCard(QFrame):
     @index.setter
     def index(self, value: int):
         self._index = value
-        self._page_label.setText(f"Page {value + 1}")
+        self._page_label.setText(t("page_manager.page_label", number=value + 1))
 
     @property
     def source(self) -> PageSource:
@@ -120,14 +121,17 @@ class _EditPageCard(QFrame):
         placeholder_h = int(self.PAGE_WIDTH * aspect)
         self._image_label.setFixedSize(self.PAGE_WIDTH, placeholder_h)
         self._image_label.setPixmap(QPixmap())
-        self._image_label.setText("Loading...")
+        self._image_label.setText(t("page_manager.loading"))
         self._rendered = False
 
     def update_annotation_indicator(self):
         has_ann = bool(self._source.text_annotations or self._source.image_annotations)
         if has_ann:
             count = len(self._source.text_annotations) + len(self._source.image_annotations)
-            self._ann_label.setText(f"\u270E {count} annotation{'s' if count != 1 else ''}")
+            if count != 1:
+                self._ann_label.setText(t("page_manager.annotation_count_plural", count=count))
+            else:
+                self._ann_label.setText(t("page_manager.annotation_count", count=count))
             self._ann_label.show()
         else:
             self._ann_label.hide()

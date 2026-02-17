@@ -14,6 +14,7 @@ from PyQt6.QtGui import (
 )
 
 from core.page_manager import ImageAnnotation, PageManager, PageSource
+from i18n import t
 
 
 class EraserCanvas(QWidget):
@@ -139,7 +140,7 @@ class EraserDialog(QDialog):
 
     def __init__(self, source: PageSource, parent=None):
         super().__init__(parent)
-        self.setWindowTitle("Eraser Tool")
+        self.setWindowTitle(t("eraser.title"))
         self.setMinimumSize(800, 700)
         self.resize(800, 700)
         self.setModal(True)
@@ -156,7 +157,7 @@ class EraserDialog(QDialog):
         layout.setSpacing(10)
 
         # Hint
-        hint = QLabel("Draw on the page to erase content")
+        hint = QLabel(t("eraser.hint"))
         hint.setStyleSheet("color: #666; font-size: 12px;")
         hint.setAlignment(Qt.AlignmentFlag.AlignCenter)
         layout.addWidget(hint)
@@ -183,7 +184,7 @@ class EraserDialog(QDialog):
         controls = QHBoxLayout()
         controls.setSpacing(12)
 
-        controls.addWidget(QLabel("Eraser size:"))
+        controls.addWidget(QLabel(t("eraser.size_label")))
 
         self._size_slider = QSlider(Qt.Orientation.Horizontal)
         self._size_slider.setRange(5, 50)
@@ -198,13 +199,13 @@ class EraserDialog(QDialog):
 
         controls.addStretch()
 
-        self._undo_btn = QPushButton("Undo")
+        self._undo_btn = QPushButton(t("eraser.undo"))
         self._undo_btn.setProperty("class", "secondaryButton")
         self._undo_btn.setEnabled(False)
         self._undo_btn.clicked.connect(self._canvas.undo)
         controls.addWidget(self._undo_btn)
 
-        self._clear_btn = QPushButton("Clear All")
+        self._clear_btn = QPushButton(t("eraser.clear_all"))
         self._clear_btn.setProperty("class", "secondaryButton")
         self._clear_btn.setEnabled(False)
         self._clear_btn.clicked.connect(self._canvas.clear)
@@ -216,12 +217,12 @@ class EraserDialog(QDialog):
         btn_row = QHBoxLayout()
         btn_row.addStretch()
 
-        cancel_btn = QPushButton("Cancel")
+        cancel_btn = QPushButton(t("common.cancel"))
         cancel_btn.setProperty("class", "secondaryButton")
         cancel_btn.clicked.connect(self.reject)
         btn_row.addWidget(cancel_btn)
 
-        self._apply_btn = QPushButton("Apply Eraser")
+        self._apply_btn = QPushButton(t("eraser.apply"))
         self._apply_btn.setObjectName("primaryButton")
         self._apply_btn.setEnabled(False)
         self._apply_btn.clicked.connect(self._on_apply)

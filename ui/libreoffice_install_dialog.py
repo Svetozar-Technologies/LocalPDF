@@ -8,6 +8,7 @@ from PyQt6.QtCore import Qt, pyqtSignal
 
 from workers.libreoffice_install_worker import LibreOfficeInstallWorker
 from core.utils import get_libreoffice_install_instructions
+from i18n import t
 
 
 class LibreOfficeInstallDialog(QDialog):
@@ -21,7 +22,7 @@ class LibreOfficeInstallDialog(QDialog):
         self._setup_ui()
 
     def _setup_ui(self):
-        self.setWindowTitle("Install LibreOffice")
+        self.setWindowTitle(t("lo_install.title"))
         self.setMinimumWidth(500)
         self.setModal(True)
 
@@ -30,16 +31,12 @@ class LibreOfficeInstallDialog(QDialog):
         layout.setContentsMargins(24, 20, 24, 20)
 
         # Title
-        title = QLabel("LibreOffice Required")
+        title = QLabel(t("lo_install.required"))
         title.setProperty("class", "sectionTitle")
         layout.addWidget(title)
 
         # Info
-        info = QLabel(
-            "LibreOffice is needed for PowerPoint to PDF conversion.\n\n"
-            "It will be downloaded (~300 MB) and installed automatically.\n"
-            "This is a one-time setup. Your files are never uploaded."
-        )
+        info = QLabel(t("lo_install.info"))
         info.setWordWrap(True)
         info.setProperty("class", "textSecondary")
         layout.addWidget(info)
@@ -61,19 +58,19 @@ class LibreOfficeInstallDialog(QDialog):
         # Buttons
         btn_row = QHBoxLayout()
 
-        self._manual_btn = QPushButton("Install Manually")
+        self._manual_btn = QPushButton(t("lo_install.manual"))
         self._manual_btn.setProperty("class", "secondaryButton")
         self._manual_btn.clicked.connect(self._show_manual_instructions)
         btn_row.addWidget(self._manual_btn)
 
         btn_row.addStretch()
 
-        self._cancel_btn = QPushButton("Not Now")
+        self._cancel_btn = QPushButton(t("lo_install.not_now"))
         self._cancel_btn.setProperty("class", "secondaryButton")
         self._cancel_btn.clicked.connect(self._on_cancel)
         btn_row.addWidget(self._cancel_btn)
 
-        self._install_btn = QPushButton("Download && Install")
+        self._install_btn = QPushButton(t("lo_install.download"))
         self._install_btn.setObjectName("primaryButton")
         self._install_btn.clicked.connect(self._start_install)
         btn_row.addWidget(self._install_btn)
@@ -82,12 +79,12 @@ class LibreOfficeInstallDialog(QDialog):
 
     def _start_install(self):
         self._install_btn.setEnabled(False)
-        self._cancel_btn.setText("Cancel")
+        self._cancel_btn.setText(t("common.cancel"))
         self._manual_btn.hide()
         self._progress_bar.show()
         self._progress_bar.setValue(0)
         self._status_label.show()
-        self._status_label.setText("Starting download...")
+        self._status_label.setText(t("lo_install.starting"))
 
         self._worker = LibreOfficeInstallWorker()
         self._worker.progress.connect(self._on_progress)
@@ -105,12 +102,11 @@ class LibreOfficeInstallDialog(QDialog):
 
         if result.success:
             self._progress_bar.setValue(100)
-            self._status_label.setText("LibreOffice installed successfully!")
+            self._status_label.setText(t("lo_install.success_msg"))
             self.install_completed.emit(result.soffice_path)
             QMessageBox.information(
-                self, "Success",
-                "LibreOffice has been installed successfully!\n\n"
-                "PPT to PDF conversion is now available.",
+                self, t("lo_install.success_title"),
+                t("lo_install.success_detail"),
             )
             self.accept()
         else:
@@ -118,12 +114,12 @@ class LibreOfficeInstallDialog(QDialog):
             self._progress_bar.hide()
             self._status_label.setText(result.error_message)
             self._install_btn.setEnabled(True)
-            self._install_btn.setText("Retry")
-            self._cancel_btn.setText("Close")
+            self._install_btn.setText(t("lo_install.retry"))
+            self._cancel_btn.setText(t("common.close"))
             self._manual_btn.show()
             QMessageBox.warning(
-                self, "Installation Failed",
-                f"Could not install LibreOffice:\n\n{result.error_message}",
+                self, t("lo_install.failed_title"),
+                t("lo_install.failed_msg", error=result.error_message),
             )
 
     def _on_error(self, error_msg: str):
@@ -132,10 +128,10 @@ class LibreOfficeInstallDialog(QDialog):
         self._progress_bar.hide()
         self._status_label.setText(error_msg)
         self._install_btn.setEnabled(True)
-        self._install_btn.setText("Retry")
-        self._cancel_btn.setText("Close")
+        self._install_btn.setText(t("lo_install.retry"))
+        self._cancel_btn.setText(t("common.close"))
         self._manual_btn.show()
-        QMessageBox.warning(self, "Error", error_msg)
+        QMessageBox.warning(self, t("lo_install.failed_title"), error_msg)
 
     def _on_cancel(self):
         if self._worker and self._worker.isRunning():
@@ -146,7 +142,7 @@ class LibreOfficeInstallDialog(QDialog):
 
     def _show_manual_instructions(self):
         instructions = get_libreoffice_install_instructions()
-        QMessageBox.information(self, "Manual Installation", instructions)
+        QMessageBox.information(self, t("lo_install.manual_title"), instructions)
 
     def closeEvent(self, event):
         if self._worker and self._worker.isRunning():

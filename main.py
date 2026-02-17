@@ -10,6 +10,7 @@ import fitz  # PyMuPDF
 
 from ui.main_window import MainWindow
 from ui.theme import ThemeManager
+import i18n
 
 
 def main():
@@ -24,6 +25,11 @@ def main():
     app.setApplicationName("LocalPDF")
     app.setApplicationVersion("1.1.0")
     app.setOrganizationName("Svetozar Technologies")
+
+    # Translations
+    i18n.init()
+    if i18n.is_rtl():
+        app.setLayoutDirection(Qt.LayoutDirection.RightToLeft)
 
     # Theme
     theme_manager = ThemeManager(app)

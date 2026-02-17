@@ -13,6 +13,7 @@ from ui.components.result_card import ResultCard
 from workers.protect_worker import ProtectWorker
 from core.protector import ProtectConfig, UnlockConfig
 from core.utils import validate_pdf, get_output_path, format_file_size
+from i18n import t
 
 
 class ProtectWidget(QWidget):
@@ -35,11 +36,11 @@ class ProtectWidget(QWidget):
         layout.setContentsMargins(32, 24, 32, 24)
         layout.setSpacing(16)
 
-        title = QLabel("Protect / Unlock PDF")
+        title = QLabel(t("protect.title"))
         title.setProperty("class", "sectionTitle")
         layout.addWidget(title)
 
-        subtitle = QLabel("Add password protection or remove passwords from PDFs. 100% local — your passwords never leave this computer.")
+        subtitle = QLabel(t("protect.subtitle"))
         subtitle.setProperty("class", "sectionSubtitle")
         subtitle.setWordWrap(True)
         layout.addWidget(subtitle)
@@ -47,17 +48,17 @@ class ProtectWidget(QWidget):
         # Drop zone (accepts any PDF, including encrypted for unlock mode)
         self._drop_zone = DropZone(
             accepted_extensions=[".pdf"],
-            placeholder_text="Drop PDF here or click to browse",
+            placeholder_text=t("protect.drop_text"),
         )
         layout.addWidget(self._drop_zone)
 
         # Mode selection
-        mode_group = QGroupBox("Mode")
+        mode_group = QGroupBox(t("protect.mode"))
         mode_layout = QVBoxLayout(mode_group)
 
         self._mode_group = QButtonGroup(self)
-        self._protect_radio = QRadioButton("Protect — Add password to PDF")
-        self._unlock_radio = QRadioButton("Unlock — Remove password from PDF")
+        self._protect_radio = QRadioButton(t("protect.mode_protect"))
+        self._unlock_radio = QRadioButton(t("protect.mode_unlock"))
         self._protect_radio.setChecked(True)
         self._mode_group.addButton(self._protect_radio, 0)
         self._mode_group.addButton(self._unlock_radio, 1)
@@ -67,56 +68,56 @@ class ProtectWidget(QWidget):
         layout.addWidget(mode_group)
 
         # Protect options
-        self._protect_options = QGroupBox("Protection Settings")
+        self._protect_options = QGroupBox(t("protect.settings"))
         protect_layout = QVBoxLayout(self._protect_options)
 
         # User password
         row1 = QHBoxLayout()
-        row1.addWidget(QLabel("Open Password:"))
+        row1.addWidget(QLabel(t("protect.open_password")))
         self._user_pw_input = QLineEdit()
-        self._user_pw_input.setPlaceholderText("Password required to open the PDF")
+        self._user_pw_input.setPlaceholderText(t("protect.open_password_hint"))
         self._user_pw_input.setEchoMode(QLineEdit.EchoMode.Password)
         row1.addWidget(self._user_pw_input)
         protect_layout.addLayout(row1)
 
         # Owner password
         row2 = QHBoxLayout()
-        row2.addWidget(QLabel("Owner Password:"))
+        row2.addWidget(QLabel(t("protect.owner_password")))
         self._owner_pw_input = QLineEdit()
-        self._owner_pw_input.setPlaceholderText("(Optional) Password for editing permissions")
+        self._owner_pw_input.setPlaceholderText(t("protect.owner_password_hint"))
         self._owner_pw_input.setEchoMode(QLineEdit.EchoMode.Password)
         row2.addWidget(self._owner_pw_input)
         protect_layout.addLayout(row2)
 
         # Permissions
-        perm_label = QLabel("Permissions (when owner password is set):")
+        perm_label = QLabel(t("protect.permissions"))
         perm_label.setStyleSheet("font-weight: bold; margin-top: 8px;")
         protect_layout.addWidget(perm_label)
 
-        self._allow_print = QCheckBox("Allow printing")
+        self._allow_print = QCheckBox(t("protect.allow_print"))
         self._allow_print.setChecked(True)
         protect_layout.addWidget(self._allow_print)
 
-        self._allow_copy = QCheckBox("Allow copying text")
+        self._allow_copy = QCheckBox(t("protect.allow_copy"))
         protect_layout.addWidget(self._allow_copy)
 
-        self._allow_modify = QCheckBox("Allow modifying")
+        self._allow_modify = QCheckBox(t("protect.allow_modify"))
         protect_layout.addWidget(self._allow_modify)
 
-        self._allow_annotate = QCheckBox("Allow annotating")
+        self._allow_annotate = QCheckBox(t("protect.allow_annotate"))
         self._allow_annotate.setChecked(True)
         protect_layout.addWidget(self._allow_annotate)
 
         layout.addWidget(self._protect_options)
 
         # Unlock options
-        self._unlock_options = QGroupBox("Unlock Settings")
+        self._unlock_options = QGroupBox(t("protect.unlock_settings"))
         unlock_layout = QVBoxLayout(self._unlock_options)
 
         row3 = QHBoxLayout()
-        row3.addWidget(QLabel("Password:"))
+        row3.addWidget(QLabel(t("protect.password_label")))
         self._unlock_pw_input = QLineEdit()
-        self._unlock_pw_input.setPlaceholderText("Enter the PDF password")
+        self._unlock_pw_input.setPlaceholderText(t("protect.password_hint"))
         self._unlock_pw_input.setEchoMode(QLineEdit.EchoMode.Password)
         row3.addWidget(self._unlock_pw_input)
         unlock_layout.addLayout(row3)
@@ -125,7 +126,7 @@ class ProtectWidget(QWidget):
         layout.addWidget(self._unlock_options)
 
         # Action button
-        self._action_btn = QPushButton("Protect PDF")
+        self._action_btn = QPushButton(t("protect.button_protect"))
         self._action_btn.setObjectName("primaryButton")
         self._action_btn.setEnabled(False)
         layout.addWidget(self._action_btn)
@@ -158,22 +159,22 @@ class ProtectWidget(QWidget):
         if self._protect_radio.isChecked():
             self._protect_options.show()
             self._unlock_options.hide()
-            self._action_btn.setText("Protect PDF")
+            self._action_btn.setText(t("protect.button_protect"))
         else:
             self._protect_options.hide()
             self._unlock_options.show()
-            self._action_btn.setText("Unlock PDF")
+            self._action_btn.setText(t("protect.button_unlock"))
 
     def _on_file_selected(self, file_path: str):
         # For unlock mode, we accept encrypted PDFs too — skip validate_pdf
         if not os.path.exists(file_path):
-            QMessageBox.warning(self, "Invalid File", "File not found.")
+            QMessageBox.warning(self, t("common.invalid_file"), t("protect.file_not_found"))
             self._drop_zone.reset()
             return
 
         ext = os.path.splitext(file_path)[1].lower()
         if ext != ".pdf":
-            QMessageBox.warning(self, "Invalid File", "Please select a PDF file.")
+            QMessageBox.warning(self, t("common.invalid_file"), t("protect.select_pdf"))
             self._drop_zone.reset()
             return
 
@@ -203,8 +204,8 @@ class ProtectWidget(QWidget):
 
         if not user_pw and not owner_pw:
             QMessageBox.warning(
-                self, "No Password",
-                "Please enter at least one password (open or owner).",
+                self, t("protect.no_password"),
+                t("protect.no_password_msg"),
             )
             return
 
@@ -226,7 +227,7 @@ class ProtectWidget(QWidget):
     def _do_unlock(self):
         password = self._unlock_pw_input.text()
         if not password:
-            QMessageBox.warning(self, "No Password", "Please enter the PDF password.")
+            QMessageBox.warning(self, t("protect.no_password"), t("protect.no_unlock_password"))
             return
 
         output_path = get_output_path(self._current_file, suffix="_unlocked")
@@ -263,20 +264,20 @@ class ProtectWidget(QWidget):
         self._worker = None
 
         if result.success:
-            mode = "Protected" if self._protect_radio.isChecked() else "Unlocked"
-            self._result_card.show_simple_result(
-                result.output_path,
-                title=f"{mode}! {result.page_count} pages",
-            )
+            if self._protect_radio.isChecked():
+                title = t("protect.protected_result", pages=result.page_count)
+            else:
+                title = t("protect.unlocked_result", pages=result.page_count)
+            self._result_card.show_simple_result(result.output_path, title=title)
         else:
-            QMessageBox.critical(self, "Error", result.error_message or "Operation failed.")
+            QMessageBox.critical(self, t("common.error"), result.error_message or t("protect.failed"))
             self._progress.reset()
 
     def _on_error(self, error_msg: str):
         self._progress.reset()
         self._action_btn.setEnabled(True)
         self._worker = None
-        QMessageBox.critical(self, "Error", error_msg)
+        QMessageBox.critical(self, t("common.error"), error_msg)
 
     def _on_cancel_clicked(self):
         if self._worker:

@@ -13,6 +13,7 @@ from ui.components.result_card import ResultCard
 from workers.split_worker import SplitWorker
 from core.splitter import PageRangeParser
 from core.utils import validate_pdf, get_output_path, format_file_size, check_disk_space
+from i18n import t
 
 
 class SplitWidget(QWidget):
@@ -36,18 +37,18 @@ class SplitWidget(QWidget):
         layout.setContentsMargins(32, 24, 32, 24)
         layout.setSpacing(16)
 
-        title = QLabel("Split / Extract Pages")
+        title = QLabel(t("split.title"))
         title.setProperty("class", "sectionTitle")
         layout.addWidget(title)
 
-        subtitle = QLabel("Extract specific pages from a PDF or split into individual page files.")
+        subtitle = QLabel(t("split.subtitle"))
         subtitle.setProperty("class", "sectionSubtitle")
         subtitle.setWordWrap(True)
         layout.addWidget(subtitle)
 
         self._drop_zone = DropZone(
             accepted_extensions=[".pdf"],
-            placeholder_text="Drop PDF here or click to browse",
+            placeholder_text=t("split.drop_text"),
         )
         layout.addWidget(self._drop_zone)
 
@@ -58,24 +59,24 @@ class SplitWidget(QWidget):
         layout.addWidget(self._page_info)
 
         # Page selection group
-        page_group = QGroupBox("Page Selection")
+        page_group = QGroupBox(t("split.page_selection"))
         page_layout = QVBoxLayout(page_group)
 
         self._range_input = QLineEdit()
-        self._range_input.setPlaceholderText("e.g., 1-5, 3, 7-10")
+        self._range_input.setPlaceholderText(t("split.range_placeholder"))
         page_layout.addWidget(self._range_input)
 
-        helper = QLabel("Enter page numbers separated by commas. Use hyphens for ranges.")
+        helper = QLabel(t("split.range_helper"))
         helper.setProperty("class", "helperText")
         helper.setWordWrap(True)
         page_layout.addWidget(helper)
 
-        self._split_check = QCheckBox("Split into individual pages (one PDF per page)")
+        self._split_check = QCheckBox(t("split.split_individual"))
         page_layout.addWidget(self._split_check)
 
         layout.addWidget(page_group)
 
-        self._extract_btn = QPushButton("Extract Pages")
+        self._extract_btn = QPushButton(t("split.button"))
         self._extract_btn.setObjectName("primaryButton")
         self._extract_btn.setEnabled(False)
         layout.addWidget(self._extract_btn)
@@ -105,13 +106,13 @@ class SplitWidget(QWidget):
     def _on_file_selected(self, file_path: str):
         result = validate_pdf(file_path)
         if not result.valid:
-            QMessageBox.warning(self, "Invalid File", result.error_message)
+            QMessageBox.warning(self, t("common.invalid_file"), result.error_message)
             self._drop_zone.reset()
             return
 
         self._current_file = file_path
         self._page_count = result.page_count
-        self._page_info.setText(f"{result.page_count} pages")
+        self._page_info.setText(t("split.pages_info", count=result.page_count))
         self._page_info.show()
         self._result_card.reset()
         self._progress.reset()
@@ -138,7 +139,7 @@ class SplitWidget(QWidget):
         try:
             page_numbers = PageRangeParser.parse(range_str, self._page_count)
         except ValueError as e:
-            QMessageBox.warning(self, "Invalid Page Range", str(e))
+            QMessageBox.warning(self, t("split.invalid_range"), str(e))
             return
 
         split_individual = self._split_check.isChecked()
@@ -149,7 +150,7 @@ class SplitWidget(QWidget):
                 output_dir, os.path.getsize(self._current_file),
             )
             if not has_space:
-                QMessageBox.warning(self, "Disk Space", space_msg)
+                QMessageBox.warning(self, t("common.disk_space"), space_msg)
                 return
 
             self._worker = SplitWorker(
@@ -165,7 +166,7 @@ class SplitWidget(QWidget):
                 os.path.dirname(output_path), os.path.getsize(self._current_file),
             )
             if not has_space:
-                QMessageBox.warning(self, "Disk Space", space_msg)
+                QMessageBox.warning(self, t("common.disk_space"), space_msg)
                 return
 
             self._worker = SplitWorker(
@@ -198,24 +199,24 @@ class SplitWidget(QWidget):
             if len(result.output_paths) == 1:
                 self._result_card.show_simple_result(
                     result.output_paths[0],
-                    title=f"Extracted {result.total_pages_extracted} pages ({format_file_size(result.total_output_size)})",
+                    title=t("split.extracted", pages=result.total_pages_extracted, size=format_file_size(result.total_output_size)),
                 )
             else:
                 # Multiple files — show the folder
                 folder = os.path.dirname(result.output_paths[0])
                 self._result_card.show_simple_result(
                     folder,
-                    title=f"Created {len(result.output_paths)} files ({format_file_size(result.total_output_size)} total)",
+                    title=t("split.created_files", count=len(result.output_paths), size=format_file_size(result.total_output_size)),
                 )
         else:
-            QMessageBox.critical(self, "Error", result.error_message or "Split failed.")
+            QMessageBox.critical(self, t("common.error"), result.error_message or t("split.failed"))
             self._progress.reset()
 
     def _on_split_error(self, error_msg: str):
         self._progress.reset()
         self._extract_btn.setEnabled(True)
         self._worker = None
-        QMessageBox.critical(self, "Error", error_msg)
+        QMessageBox.critical(self, t("common.error"), error_msg)
 
     def _on_cancel_clicked(self):
         if self._worker:

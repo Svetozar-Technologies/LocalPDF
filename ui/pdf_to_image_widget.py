@@ -15,6 +15,7 @@ from workers.pdf_to_image_worker import PDFToImageWorker
 from core.pdf_to_image import ImageFormat
 from core.splitter import PageRangeParser
 from core.utils import validate_pdf, format_file_size, check_disk_space
+from i18n import t
 
 
 class PDFToImageWidget(QWidget):
@@ -38,11 +39,11 @@ class PDFToImageWidget(QWidget):
         layout.setContentsMargins(32, 24, 32, 24)
         layout.setSpacing(16)
 
-        title = QLabel("PDF to Image")
+        title = QLabel(t("pdf_to_image.title"))
         title.setProperty("class", "sectionTitle")
         layout.addWidget(title)
 
-        subtitle = QLabel("Export PDF pages as high-quality images. 100% local processing.")
+        subtitle = QLabel(t("pdf_to_image.subtitle"))
         subtitle.setProperty("class", "sectionSubtitle")
         subtitle.setWordWrap(True)
         layout.addWidget(subtitle)
@@ -50,7 +51,7 @@ class PDFToImageWidget(QWidget):
         # Drop zone
         self._drop_zone = DropZone(
             accepted_extensions=[".pdf"],
-            placeholder_text="Drop PDF here or click to browse",
+            placeholder_text=t("pdf_to_image.drop_text"),
         )
         layout.addWidget(self._drop_zone)
 
@@ -61,23 +62,23 @@ class PDFToImageWidget(QWidget):
         layout.addWidget(self._page_info)
 
         # Options group
-        options_group = QGroupBox("Export Options")
+        options_group = QGroupBox(t("pdf_to_image.options"))
         options_layout = QVBoxLayout(options_group)
 
         # Page range
         range_row = QHBoxLayout()
-        range_row.addWidget(QLabel("Pages:"))
+        range_row.addWidget(QLabel(t("pdf_to_image.pages")))
         self._range_input = QLineEdit()
-        self._range_input.setPlaceholderText("All pages (or e.g., 1-5, 3, 7-10)")
+        self._range_input.setPlaceholderText(t("pdf_to_image.pages_placeholder"))
         range_row.addWidget(self._range_input, 1)
         options_layout.addLayout(range_row)
 
         # Format selection
         format_row = QHBoxLayout()
-        format_row.addWidget(QLabel("Format:"))
+        format_row.addWidget(QLabel(t("pdf_to_image.format")))
         self._format_group = QButtonGroup(self)
-        self._png_radio = QRadioButton("PNG (lossless)")
-        self._jpeg_radio = QRadioButton("JPEG (smaller files)")
+        self._png_radio = QRadioButton(t("pdf_to_image.png"))
+        self._jpeg_radio = QRadioButton(t("pdf_to_image.jpeg"))
         self._png_radio.setChecked(True)
         self._format_group.addButton(self._png_radio)
         self._format_group.addButton(self._jpeg_radio)
@@ -88,9 +89,10 @@ class PDFToImageWidget(QWidget):
 
         # DPI selection
         dpi_row = QHBoxLayout()
-        dpi_row.addWidget(QLabel("Resolution:"))
+        dpi_row.addWidget(QLabel(t("pdf_to_image.resolution")))
         self._dpi_combo = QComboBox()
-        self._dpi_combo.addItems(["72 DPI (screen)", "150 DPI (standard)", "300 DPI (print quality)", "600 DPI (high quality)"])
+        for key, dpi in [("dpi_72", 72), ("dpi_150", 150), ("dpi_300", 300), ("dpi_600", 600)]:
+            self._dpi_combo.addItem(t(f"pdf_to_image.{key}"), dpi)
         self._dpi_combo.setCurrentIndex(2)  # Default 300 DPI
         dpi_row.addWidget(self._dpi_combo)
         dpi_row.addStretch()
@@ -99,7 +101,7 @@ class PDFToImageWidget(QWidget):
         layout.addWidget(options_group)
 
         # Export button
-        self._export_btn = QPushButton("Export to Images")
+        self._export_btn = QPushButton(t("pdf_to_image.button"))
         self._export_btn.setObjectName("primaryButton")
         self._export_btn.setEnabled(False)
         layout.addWidget(self._export_btn)
@@ -130,13 +132,13 @@ class PDFToImageWidget(QWidget):
     def _on_file_selected(self, file_path: str):
         result = validate_pdf(file_path)
         if not result.valid:
-            QMessageBox.warning(self, "Invalid File", result.error_message)
+            QMessageBox.warning(self, t("common.invalid_file"), result.error_message)
             self._drop_zone.reset()
             return
 
         self._current_file = file_path
         self._page_count = result.page_count
-        self._page_info.setText(f"{result.page_count} pages")
+        self._page_info.setText(t("split.pages_info", count=result.page_count))
         self._page_info.show()
         self._export_btn.setEnabled(True)
         self._result_card.reset()
@@ -151,8 +153,7 @@ class PDFToImageWidget(QWidget):
         self._progress.reset()
 
     def _get_dpi(self) -> int:
-        dpi_map = {0: 72, 1: 150, 2: 300, 3: 600}
-        return dpi_map.get(self._dpi_combo.currentIndex(), 300)
+        return self._dpi_combo.currentData() or 300
 
     def _get_format(self) -> ImageFormat:
         return ImageFormat.JPEG if self._jpeg_radio.isChecked() else ImageFormat.PNG
@@ -168,12 +169,12 @@ class PDFToImageWidget(QWidget):
             try:
                 page_numbers = PageRangeParser.parse(range_str, self._page_count)
             except ValueError as e:
-                QMessageBox.warning(self, "Invalid Page Range", str(e))
+                QMessageBox.warning(self, t("split.invalid_range"), str(e))
                 return
 
         # Select output directory
         output_dir = QFileDialog.getExistingDirectory(
-            self, "Select Output Folder",
+            self, t("pdf_to_image.select_folder"),
             os.path.dirname(self._current_file),
         )
         if not output_dir:
@@ -183,7 +184,7 @@ class PDFToImageWidget(QWidget):
         file_size = os.path.getsize(self._current_file)
         has_space, space_msg = check_disk_space(output_dir, file_size * 3)
         if not has_space:
-            QMessageBox.warning(self, "Disk Space", space_msg)
+            QMessageBox.warning(self, t("common.disk_space"), space_msg)
             return
 
         self._export_btn.setEnabled(False)
@@ -214,17 +215,17 @@ class PDFToImageWidget(QWidget):
         if result.success:
             self._result_card.show_simple_result(
                 result.output_dir,
-                title=f"Exported {result.pages_exported} pages as images",
+                title=t("pdf_to_image.complete", pages=result.pages_exported),
             )
         else:
-            QMessageBox.critical(self, "Error", result.error_message or "Export failed.")
+            QMessageBox.critical(self, t("common.error"), result.error_message or t("pdf_to_image.failed"))
             self._progress.reset()
 
     def _on_export_error(self, error_msg: str):
         self._progress.reset()
         self._export_btn.setEnabled(True)
         self._worker = None
-        QMessageBox.critical(self, "Error", error_msg)
+        QMessageBox.critical(self, t("common.error"), error_msg)
 
     def _on_cancel_clicked(self):
         if self._worker:

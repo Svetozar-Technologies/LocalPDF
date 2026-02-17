@@ -6,6 +6,8 @@ from PyQt6.QtWidgets import (
 )
 from PyQt6.QtCore import pyqtSignal
 
+from i18n import t
+
 
 class ProgressWidget(QWidget):
     """Progress bar + status label + cancel button. Hidden by default."""
@@ -39,11 +41,11 @@ class ProgressWidget(QWidget):
         # Status + cancel row
         status_row = QHBoxLayout()
 
-        self._status_label = QLabel("Preparing...")
+        self._status_label = QLabel(t("progress.preparing"))
         self._status_label.setProperty("class", "textCaption")
         status_row.addWidget(self._status_label, 1)
 
-        self._cancel_btn = QPushButton("Cancel")
+        self._cancel_btn = QPushButton(t("common.cancel"))
         self._cancel_btn.setObjectName("cancelButton")
         self._cancel_btn.clicked.connect(self.cancel_clicked.emit)
         status_row.addWidget(self._cancel_btn)
@@ -54,7 +56,7 @@ class ProgressWidget(QWidget):
         """Show widget and reset to 0%."""
         self._bar.setValue(0)
         self._pct_label.setText("0%")
-        self._status_label.setText("Starting...")
+        self._status_label.setText(t("progress.starting"))
         self._cancel_btn.setEnabled(True)
         self.show()
 

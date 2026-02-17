@@ -37,31 +37,33 @@ class LibreOfficeInfo:
 
 def validate_pdf(file_path: str) -> ValidationResult:
     """Validate a PDF file for compression."""
+    from i18n import t
+
     if not file_path:
-        return ValidationResult(False, "No file selected.")
+        return ValidationResult(False, t("validate.no_file"))
 
     if not os.path.exists(file_path):
-        return ValidationResult(False, f"File not found: {os.path.basename(file_path)}")
+        return ValidationResult(False, t("validate.file_not_found", name=os.path.basename(file_path)))
 
     ext = Path(file_path).suffix.lower()
     if ext != ".pdf":
-        return ValidationResult(False, f"Expected a PDF file, got '{ext}' file.")
+        return ValidationResult(False, t("validate.wrong_ext_pdf", ext=ext))
 
     file_size = os.path.getsize(file_path)
     if file_size == 0:
-        return ValidationResult(False, "The file is empty (0 bytes).")
+        return ValidationResult(False, t("validate.empty_file"))
 
     try:
         import fitz
         doc = fitz.open(file_path)
     except Exception as e:
-        return ValidationResult(False, f"Cannot open this PDF. It may be corrupted.\n({e})")
+        return ValidationResult(False, t("validate.cannot_open_pdf", error=str(e)))
 
     if doc.is_encrypted:
         doc.close()
         return ValidationResult(
             False,
-            "This PDF is password-protected. Please unlock it first.",
+            t("validate.encrypted"),
             file_size_bytes=file_size,
             file_type=FileType.PDF,
             is_encrypted=True,
@@ -71,7 +73,7 @@ def validate_pdf(file_path: str) -> ValidationResult:
     doc.close()
 
     if page_count == 0:
-        return ValidationResult(False, "This PDF has no pages.", file_size_bytes=file_size, file_type=FileType.PDF)
+        return ValidationResult(False, t("validate.no_pages"), file_size_bytes=file_size, file_type=FileType.PDF)
 
     return ValidationResult(
         valid=True,
@@ -83,19 +85,21 @@ def validate_pdf(file_path: str) -> ValidationResult:
 
 def validate_ppt(file_path: str) -> ValidationResult:
     """Validate a PPT/PPTX file for conversion."""
+    from i18n import t
+
     if not file_path:
-        return ValidationResult(False, "No file selected.")
+        return ValidationResult(False, t("validate.no_file"))
 
     if not os.path.exists(file_path):
-        return ValidationResult(False, f"File not found: {os.path.basename(file_path)}")
+        return ValidationResult(False, t("validate.file_not_found", name=os.path.basename(file_path)))
 
     ext = Path(file_path).suffix.lower()
     if ext not in (".ppt", ".pptx"):
-        return ValidationResult(False, f"Expected a PowerPoint file (.ppt or .pptx), got '{ext}'.")
+        return ValidationResult(False, t("validate.wrong_ext_ppt", ext=ext))
 
     file_size = os.path.getsize(file_path)
     if file_size == 0:
-        return ValidationResult(False, "The file is empty (0 bytes).")
+        return ValidationResult(False, t("validate.empty_file"))
 
     file_type = FileType.PPTX if ext == ".pptx" else FileType.PPT
 
@@ -104,11 +108,11 @@ def validate_ppt(file_path: str) -> ValidationResult:
         with open(file_path, "rb") as f:
             header = f.read(8)
         if ext == ".pptx" and header[:4] != b"PK\x03\x04":
-            return ValidationResult(False, "This file appears to be corrupted (not a valid PPTX).")
+            return ValidationResult(False, t("validate.corrupted_pptx"))
         if ext == ".ppt" and header[:8] != b"\xd0\xcf\x11\xe0\xa1\xb1\x1a\xe1":
-            return ValidationResult(False, "This file appears to be corrupted (not a valid PPT).")
+            return ValidationResult(False, t("validate.corrupted_ppt"))
     except Exception as e:
-        return ValidationResult(False, f"Cannot read this file: {e}")
+        return ValidationResult(False, t("validate.cannot_read", error=str(e)))
 
     return ValidationResult(
         valid=True,
@@ -159,10 +163,12 @@ def check_disk_space(output_dir: str, required_bytes: int) -> Tuple[bool, str]:
         # Require 2x safety margin
         needed = required_bytes * 2
         if stat.free < needed:
+            from i18n import t
             return (
                 False,
-                f"Not enough disk space. Need {format_file_size(needed)}, "
-                f"only {format_file_size(stat.free)} available.",
+                t("validate.disk_space",
+                  needed=format_file_size(needed),
+                  available=format_file_size(stat.free)),
             )
         return (True, "")
     except Exception as e:
@@ -228,49 +234,40 @@ def detect_libreoffice() -> LibreOfficeInfo:
 
 def get_libreoffice_install_instructions() -> str:
     """Return platform-specific LibreOffice install instructions."""
+    from i18n import t
     plat = get_platform()
     if plat == "macos":
-        return (
-            "LibreOffice is needed for PPT conversion.\n\n"
-            "Install it free from:\nhttps://www.libreoffice.org/download\n\n"
-            "Or with Homebrew:\nbrew install --cask libreoffice"
-        )
+        return t("lo_instructions.macos")
     if plat == "windows":
-        return (
-            "LibreOffice is needed for PPT conversion.\n\n"
-            "Download the free installer from:\nhttps://www.libreoffice.org/download\n\n"
-            "Run the installer and restart LocalPDF."
-        )
-    return (
-        "LibreOffice is needed for PPT conversion.\n\n"
-        "Install via your package manager:\nsudo apt install libreoffice\n\n"
-        "Or download from:\nhttps://www.libreoffice.org/download"
-    )
+        return t("lo_instructions.windows")
+    return t("lo_instructions.linux")
 
 
 def validate_image(file_path: str) -> ValidationResult:
     """Validate an image file for Image-to-PDF conversion."""
+    from i18n import t
+
     if not file_path:
-        return ValidationResult(False, "No file selected.")
+        return ValidationResult(False, t("validate.no_file"))
 
     if not os.path.exists(file_path):
-        return ValidationResult(False, f"File not found: {os.path.basename(file_path)}")
+        return ValidationResult(False, t("validate.file_not_found", name=os.path.basename(file_path)))
 
     ext = Path(file_path).suffix.lower()
     valid_exts = {".jpg", ".jpeg", ".png", ".bmp", ".tiff", ".tif", ".webp"}
     if ext not in valid_exts:
-        return ValidationResult(False, f"Unsupported image format: '{ext}'")
+        return ValidationResult(False, t("validate.unsupported_image", ext=ext))
 
     file_size = os.path.getsize(file_path)
     if file_size == 0:
-        return ValidationResult(False, "The file is empty (0 bytes).")
+        return ValidationResult(False, t("validate.empty_file"))
 
     try:
         from PIL import Image
         img = Image.open(file_path)
         img.verify()
     except Exception as e:
-        return ValidationResult(False, f"Cannot open image: {e}")
+        return ValidationResult(False, t("validate.cannot_open_image", error=str(e)))
 
     return ValidationResult(valid=True, file_size_bytes=file_size)
 
