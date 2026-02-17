@@ -77,7 +77,7 @@ class ConvertWidget(QWidget):
         brand_row = QHBoxLayout()
         brand_row.addWidget(QLabel("Brand Name:"))
         self._brand_input = QLineEdit()
-        self._brand_input.setPlaceholderText("e.g., PrepLadder, MyCompany (optional)")
+        self._brand_input.setPlaceholderText("e.g., MyCompany (optional)")
         brand_row.addWidget(self._brand_input)
         branded_layout.addLayout(brand_row)
 

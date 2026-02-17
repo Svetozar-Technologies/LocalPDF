@@ -15,7 +15,7 @@ class SettingsWidget(QWidget):
     def __init__(self, theme_manager=None, parent=None):
         super().__init__(parent)
         self._theme_manager = theme_manager
-        self._settings = QSettings("PrepLadder", "LocalPDF")
+        self._settings = QSettings("Svetozar Technologies", "LocalPDF")
         self._setup_ui()
 
     def _setup_ui(self):

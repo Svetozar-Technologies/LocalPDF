@@ -17,7 +17,7 @@ class ThemeManager:
 
     def __init__(self, app: QApplication):
         self._app = app
-        self._settings = QSettings("PrepLadder", "LocalPDF")
+        self._settings = QSettings("Svetozar Technologies", "LocalPDF")
         self._current_theme = self._settings.value("theme", self.LIGHT)
         self._setup_font()
 

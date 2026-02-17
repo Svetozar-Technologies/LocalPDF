@@ -3,7 +3,7 @@
 set -e
 
 APP_NAME="LocalPDF"
-DMG_NAME="LocalPDF-1.0.0-macOS"
+DMG_NAME="LocalPDF-1.1.0-macOS"
 DIST_DIR="$(cd "$(dirname "$0")/.." && pwd)/dist"
 APP_PATH="${DIST_DIR}/${APP_NAME}.app"
 DMG_PATH="${DIST_DIR}/${DMG_NAME}.dmg"

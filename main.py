@@ -22,8 +22,8 @@ def main():
 
     app = QApplication(sys.argv)
     app.setApplicationName("LocalPDF")
-    app.setApplicationVersion("1.0.0")
-    app.setOrganizationName("PrepLadder")
+    app.setApplicationVersion("1.1.0")
+    app.setOrganizationName("Svetozar Technologies")
 
     # Theme
     theme_manager = ThemeManager(app)

@@ -198,8 +198,8 @@ if sys.platform == 'darwin':
         info_plist={
             'CFBundleName': 'LocalPDF',
             'CFBundleDisplayName': 'LocalPDF',
-            'CFBundleVersion': '1.0.0',
-            'CFBundleShortVersionString': '1.0.0',
+            'CFBundleVersion': '1.1.0',
+            'CFBundleShortVersionString': '1.1.0',
             'CFBundleExecutable': 'LocalPDF',
             'CFBundleIdentifier': 'ai.localpdf.desktop',
             'NSHighResolutionCapable': True,
@@ -218,7 +218,7 @@ if sys.platform == 'darwin':
             'NSDownloadsFolderUsageDescription': 'LocalPDF needs access to save processed documents.',
             'LSApplicationCategoryType': 'public.app-category.productivity',
             'NSPrincipalClass': 'NSApplication',
-            'NSHumanReadableCopyright': 'Copyright © 2025 Svetozar Technologies. MIT License.',
+            'NSHumanReadableCopyright': 'Copyright © 2025 PrepLadder. MIT License.',
             'CFBundleGetInfoString': 'LocalPDF - Private PDF Tools. 100% Offline.',
         },
     )
