@@ -2,7 +2,15 @@
 
 **Private PDF Tools - 100% Offline**
 
-Your documents deserve privacy. LocalPDF compresses, merges, splits, protects, watermarks, converts, and OCRs PDFs entirely on your Mac. No cloud. No uploads. No compromise.
+Your documents deserve privacy. LocalPDF compresses, merges, splits, protects, watermarks, converts, and edits PDFs entirely on your device. No cloud. No uploads. No compromise.
+
+## Download
+
+| Platform | Download |
+|---|---|
+| macOS | [LocalPDF-1.2.0-macOS.dmg](https://github.com/Svetozar-Technologies/LocalPDF/releases/latest/download/LocalPDF-1.2.0-macOS.dmg) |
+| Windows | [LocalPDF-Windows.zip](https://github.com/Svetozar-Technologies/LocalPDF/releases/latest/download/LocalPDF-Windows.zip) |
+| Linux | [LocalPDF-Linux.tar.gz](https://github.com/Svetozar-Technologies/LocalPDF/releases/latest/download/LocalPDF-Linux.tar.gz) |
 
 ## Why LocalPDF?
 
@@ -10,6 +18,7 @@ Your documents deserve privacy. LocalPDF compresses, merges, splits, protects, w
 - **No Accounts** - No sign-up, no API keys, no tracking
 - **Free Forever** - MIT licensed, open source
 - **Fast & Efficient** - Native performance with PyMuPDF
+- **Multi-Language** - Available in 8 languages including RTL support
 
 ## Features
 
@@ -21,19 +30,39 @@ Your documents deserve privacy. LocalPDF compresses, merges, splits, protects, w
 - **Protect / Unlock** - Add or remove password protection (AES-256 encryption)
 - **Watermark** - Add text or image watermarks to any PDF
 
+### Page Editor
+- **Page Manager** - Reorder, rotate, delete, and insert pages
+- **Annotations** - Add text, images, and signatures to PDF pages
+- **Eraser Tool** - Remove content from PDF pages
+- **Edit & Preview** - Full page editing with zoom and navigation
+
 ### Convert
 - **Image to PDF** - Convert images (JPG, PNG, etc.) to PDF
 - **PDF to Image** - Export PDF pages as PNG or JPEG (72-600 DPI)
-- **Convert PPT** - Convert PowerPoint presentations to PDF
+- **Convert PPT** - Convert PowerPoint presentations to PDF (via LibreOffice)
 
-### AI Tools
-- **OCR (Scan to Text)** - Extract text from scanned PDFs and images using Tesseract OCR
-  - Extract text for copy/paste
-  - Create searchable PDFs with invisible text layer
-  - Multi-language support
-- **Dark Mode** - Comfortable use day and night
+### Multi-Language Support
+LocalPDF is available in 8 languages:
+
+| Language | Native Name |
+|---|---|
+| English | English |
+| Hindi | हिन्दी |
+| Russian | Русский |
+| Chinese (Simplified) | 中文 |
+| Japanese | 日本語 |
+| Spanish | Español |
+| French | Français |
+| Arabic (RTL) | العربية |
+
+Change the language from **Settings** within the app.
 
 ## Quick Start
+
+### From Release (Recommended)
+Download the latest release for your platform from the [Releases](https://github.com/Svetozar-Technologies/LocalPDF/releases/latest) page.
+
+### From Source
 
 1. Clone the repository:
    ```bash
@@ -52,63 +81,16 @@ Your documents deserve privacy. LocalPDF compresses, merges, splits, protects, w
    pip install -r requirements.txt
    ```
 
-4. Install Tesseract OCR (for text recognition):
-   ```bash
-   # macOS
-   brew install tesseract
-
-   # Ubuntu/Debian
-   sudo apt install tesseract-ocr
-
-   # Windows - download from:
-   # https://github.com/UB-Mannheim/tesseract/wiki
-   ```
-
-5. Run LocalPDF:
+4. Run LocalPDF:
    ```bash
    python main.py
    ```
 
 ## Requirements
 
-- macOS 11.0 or later (Windows/Linux coming soon)
-- Python 3.9+
-- 4GB RAM minimum
-- Tesseract OCR (for OCR features)
-- LibreOffice (for PPT conversion)
-
-## Project Structure
-
-```
-LocalPDF/
-├── main.py                 # Application entry point
-├── ui/                     # User interface components
-│   ├── main_window.py      # Main application window
-│   ├── compress_widget.py  # Single file compression
-│   ├── batch_compress_widget.py  # Batch compression
-│   ├── merge_widget.py     # PDF merging
-│   ├── split_widget.py     # PDF splitting
-│   ├── protect_widget.py   # Password protect/unlock
-│   ├── watermark_widget.py # Watermark addition
-│   ├── image_to_pdf_widget.py  # Image conversion
-│   ├── pdf_to_image_widget.py  # PDF export to images
-│   ├── convert_widget.py   # PPT conversion
-│   ├── ocr_widget.py       # OCR text recognition
-│   ├── settings_widget.py  # App settings
-│   └── theme.py            # Theme management
-├── core/                   # Core functionality
-│   ├── compressor.py       # PDF compression engine
-│   ├── merger.py           # PDF merging logic
-│   ├── splitter.py         # PDF splitting logic
-│   ├── protector.py        # PDF encryption/decryption
-│   ├── watermark.py        # Watermark engine
-│   ├── converter.py        # Format conversion
-│   ├── image_to_pdf.py     # Image to PDF conversion
-│   ├── pdf_to_image.py     # PDF to Image conversion
-│   ├── ocr.py              # OCR engine (Tesseract)
-│   └── utils.py            # Shared utilities
-└── workers/                # Background processing
-```
+- **macOS** 11.0+, **Windows** 10+, or **Linux** (Ubuntu 22.04+)
+- Python 3.9+ (when running from source)
+- LibreOffice (optional, for PPT conversion)
 
 ## Technology
 
@@ -118,7 +100,6 @@ LocalPDF is built with:
 - **PyMuPDF** - Fast PDF manipulation
 - **Pillow** - Image processing
 - **ReportLab** - PDF generation
-- **Tesseract OCR** - Offline text recognition
 
 ## Privacy Promise
 
