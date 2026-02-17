@@ -1,9 +1,9 @@
 """
-Branded PDF generator for PrepLadder-style slide decks.
+Branded PDF generator for custom slide decks.
 
 Features:
-- Cover page with subject name, optional cover image
-- 2 slides per page (stacked vertically)
+- Cover page with brand name, subject name, optional cover image
+- A4 Portrait (2 slides/page) or A4 Landscape (1 slide/page)
 - Diagonal watermark on every content page
 - Page numbers
 """
@@ -12,7 +12,7 @@ import io
 import os
 import fitz  # PyMuPDF
 from PIL import Image
-from reportlab.lib.pagesizes import A4
+from reportlab.lib.pagesizes import A4, landscape as landscape_pagesize
 from reportlab.lib.units import mm
 from reportlab.lib.colors import Color, HexColor
 from reportlab.pdfgen.canvas import Canvas
@@ -28,7 +28,7 @@ class BrandingConfig:
     subject_name: str = "Subject"
     subtitle: str = ""
     cover_image_path: Optional[str] = None
-    watermark_text: str = "PREPLADDER"
+    watermark_text: str = ""
     watermark_opacity: float = 0.06
     watermark_color: str = "#888888"
     watermark_font_size: int = 72
@@ -37,6 +37,9 @@ class BrandingConfig:
     slide_spacing: float = 22.0  # ~0.3 inch
     add_page_numbers: bool = True
     include_cover: bool = True
+    brand_name: str = ""
+    tagline: str = ""
+    page_orientation: str = "portrait"  # "portrait" or "landscape"
 
 
 @dataclass
@@ -95,16 +98,23 @@ class BrandedPDFGenerator:
             on_progress(60, 100, "Composing branded PDF...")
 
         # Create output PDF with reportlab
-        page_w, page_h = A4
-        c = Canvas(config.output_path, pagesize=A4)
-        c.setTitle(f"{config.subject_name} - PrepLadder Notes")
-        c.setAuthor("PrepLadder")
+        if config.page_orientation == "landscape":
+            pagesize = landscape_pagesize(A4)
+        else:
+            pagesize = A4
+        page_w, page_h = pagesize
+        c = Canvas(config.output_path, pagesize=pagesize)
+        title_parts = [config.subject_name]
+        if config.brand_name:
+            title_parts.append(config.brand_name)
+        c.setTitle(" - ".join(title_parts))
+        c.setAuthor(config.brand_name or "LocalPDF")
 
         total_pages = 0
 
         # Cover page
         if config.include_cover:
-            self._draw_cover_page(c, config)
+            self._draw_cover_page(c, config, pagesize)
             c.showPage()
             total_pages += 1
 
@@ -113,7 +123,7 @@ class BrandedPDFGenerator:
         spacing = config.slide_spacing
         usable_w = page_w - 2 * margin
         usable_h = page_h - 2 * margin
-        spp = config.slides_per_page
+        spp = 1 if config.page_orientation == "landscape" else config.slides_per_page
         slot_h = (usable_h - (spp - 1) * spacing) / spp
 
         for i in range(0, total_slides, spp):
@@ -123,7 +133,8 @@ class BrandedPDFGenerator:
             batch = slide_images[i: i + spp]
 
             # Draw watermark first (behind slides)
-            self._draw_watermark(c, config)
+            if config.watermark_text:
+                self._draw_watermark(c, config, pagesize)
 
             for j, pil_img in enumerate(batch):
                 # Calculate position: stack from top
@@ -150,7 +161,7 @@ class BrandedPDFGenerator:
             # Page number
             if config.add_page_numbers:
                 content_page_num = (i // spp) + 1
-                self._draw_page_number(c, content_page_num)
+                self._draw_page_number(c, content_page_num, pagesize)
 
             c.showPage()
             total_pages += 1
@@ -181,9 +192,9 @@ class BrandedPDFGenerator:
         return Image.frombytes("RGB", [pix.width, pix.height], pix.samples)
 
     @staticmethod
-    def _draw_cover_page(c: Canvas, config: BrandingConfig):
+    def _draw_cover_page(c: Canvas, config: BrandingConfig, pagesize=A4):
         """Draw the branded cover page."""
-        w, h = A4
+        w, h = pagesize
 
         # Background
         c.setFillColor(HexColor("#1a1a2e"))
@@ -193,10 +204,11 @@ class BrandedPDFGenerator:
         c.setFillColor(HexColor("#4da6ff"))
         c.rect(0, h - 8, w, 8, fill=1, stroke=0)
 
-        # PrepLadder branding
-        c.setFillColor(HexColor("#ffffff"))
-        c.setFont("Helvetica-Bold", 16)
-        c.drawCentredString(w / 2, h - 50, "PrepLadder")
+        # Brand name
+        if config.brand_name:
+            c.setFillColor(HexColor("#ffffff"))
+            c.setFont("Helvetica-Bold", 16)
+            c.drawCentredString(w / 2, h - 50, config.brand_name)
 
         # Subject name (large)
         c.setFont("Helvetica-Bold", 48)
@@ -234,17 +246,18 @@ class BrandedPDFGenerator:
         c.line(w * 0.15, 90, w * 0.85, 90)
 
         # Bottom text
-        c.setFillColor(HexColor("#cccccc"))
-        c.setFont("Helvetica-Bold", 20)
-        c.drawCentredString(w / 2, 55, "RESOLVE 2026")
+        if config.tagline:
+            c.setFillColor(HexColor("#cccccc"))
+            c.setFont("Helvetica-Bold", 20)
+            c.drawCentredString(w / 2, 55, config.tagline)
         c.setFont("Helvetica", 11)
         c.setFillColor(HexColor("#888888"))
         c.drawCentredString(w / 2, 35, "100% Local Processing")
 
     @staticmethod
-    def _draw_watermark(c: Canvas, config: BrandingConfig):
+    def _draw_watermark(c: Canvas, config: BrandingConfig, pagesize=A4):
         """Draw diagonal watermark text across the page."""
-        w, h = A4
+        w, h = pagesize
         c.saveState()
 
         # Parse color
@@ -264,9 +277,9 @@ class BrandedPDFGenerator:
         c.restoreState()
 
     @staticmethod
-    def _draw_page_number(c: Canvas, page_num: int):
+    def _draw_page_number(c: Canvas, page_num: int, pagesize=A4):
         """Draw page number at bottom center."""
-        w, _ = A4
+        w, _ = pagesize
         c.setFont("Helvetica", 9)
         c.setFillColor(HexColor("#666666"))
         c.drawCentredString(w / 2, 20, f"Page {page_num}")

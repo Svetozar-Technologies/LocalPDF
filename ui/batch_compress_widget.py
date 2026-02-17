@@ -136,14 +136,16 @@ class BatchCompressWidget(QWidget):
 
     def _on_file_finished(self, index: int, file_result):
         if file_result.success:
+            out_name = os.path.basename(file_result.output_path)
             result_text = (
                 f"{format_file_size(file_result.original_size)} "
-                f"\u2192 {format_file_size(file_result.compressed_size)}"
+                f"\u2192 {format_file_size(file_result.compressed_size)} "
+                f"({out_name})"
             )
             self._file_list.update_file_status(index, FileStatus.DONE, result_text=result_text)
         else:
             self._file_list.update_file_status(
-                index, FileStatus.ERROR, error_text=file_result.error_message[:30],
+                index, FileStatus.ERROR, error_text=file_result.error_message,
             )
 
     def _on_batch_finished(self, result):
@@ -151,19 +153,14 @@ class BatchCompressWidget(QWidget):
         self._compress_btn.setEnabled(True)
         self._worker = None
 
-        # Find folder of first successful output for "Open Folder" button
-        output_folder = ""
-        for fr in result.file_results:
-            if fr.success and fr.output_path:
-                output_folder = os.path.dirname(fr.output_path)
-                break
+        output_folder = getattr(result, 'output_folder', '') or ""
 
         if result.total_original_size > 0:
             self._result_card.show_result(
                 result.total_original_size,
                 result.total_compressed_size,
                 output_folder,
-                title=f"Batch Complete: {result.succeeded}/{result.total_files} files compressed",
+                title=f"Batch Complete: {result.succeeded}/{result.total_files} files saved to compressed/",
             )
         else:
             self._result_card.show_simple_result(
@@ -195,4 +192,7 @@ class BatchCompressWidget(QWidget):
     def cleanup(self):
         if self._worker and self._worker.isRunning():
             self._worker.cancel()
-            self._worker.wait(5000)
+            if not self._worker.wait(5000):
+                self._worker.terminate()
+                self._worker.wait(2000)
+        self._worker = None

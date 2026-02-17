@@ -239,4 +239,7 @@ class SplitWidget(QWidget):
     def cleanup(self):
         if self._worker and self._worker.isRunning():
             self._worker.cancel()
-            self._worker.wait(5000)
+            if not self._worker.wait(5000):
+                self._worker.terminate()
+                self._worker.wait(2000)
+        self._worker = None

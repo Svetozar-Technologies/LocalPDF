@@ -5,6 +5,7 @@ import sys
 import subprocess
 import tempfile
 import shutil
+import time
 from dataclasses import dataclass
 from typing import Optional, Callable
 from pathlib import Path
@@ -74,28 +75,44 @@ class PPTConverter:
                 on_progress(20, 100, "Converting slides to PDF...")
 
             try:
-                kwargs = {
-                    "capture_output": True,
-                    "text": True,
-                    "timeout": 300,
+                popen_kwargs = {
+                    "stdout": subprocess.PIPE,
+                    "stderr": subprocess.PIPE,
                 }
                 # On Windows, hide the console window
                 if get_platform() == "windows":
-                    kwargs["creationflags"] = subprocess.CREATE_NO_WINDOW
+                    popen_kwargs["creationflags"] = subprocess.CREATE_NO_WINDOW
 
-                result = subprocess.run(cmd, **kwargs)
+                proc = subprocess.Popen(cmd, **popen_kwargs)
+                start_time = time.time()
+                timeout = 300
 
-                if result.returncode != 0:
-                    error_detail = result.stderr.strip() or result.stdout.strip()
+                # Poll with cancellation check
+                while proc.poll() is None:
+                    if is_cancelled and is_cancelled():
+                        proc.kill()
+                        proc.wait()
+                        return ConversionResult(
+                            success=False,
+                            error_message="Cancelled.",
+                        )
+                    if time.time() - start_time > timeout:
+                        proc.kill()
+                        proc.wait()
+                        return ConversionResult(
+                            success=False,
+                            error_message="Conversion timed out. The file may be too large.",
+                        )
+                    time.sleep(0.3)
+
+                if proc.returncode != 0:
+                    stderr = proc.stderr.read().decode(errors="replace").strip() if proc.stderr else ""
+                    stdout = proc.stdout.read().decode(errors="replace").strip() if proc.stdout else ""
+                    error_detail = stderr or stdout
                     return ConversionResult(
                         success=False,
                         error_message=f"LibreOffice conversion failed.\n{error_detail}",
                     )
-            except subprocess.TimeoutExpired:
-                return ConversionResult(
-                    success=False,
-                    error_message="Conversion timed out. The file may be too large.",
-                )
             except Exception as e:
                 return ConversionResult(
                     success=False,

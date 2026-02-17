@@ -73,7 +73,7 @@ class _FileRow(QFrame):
         # Status badge (optional)
         if self._show_status:
             self._status_label = QLabel("")
-            self._status_label.setFixedWidth(100)
+            self._status_label.setMinimumWidth(100)
             self._status_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
             self._update_status_display()
             layout.addWidget(self._status_label)

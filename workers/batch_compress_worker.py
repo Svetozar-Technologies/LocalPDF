@@ -27,6 +27,7 @@ class BatchCompressResult:
     failed: int = 0
     total_original_size: int = 0
     total_compressed_size: int = 0
+    output_folder: str = ""
     file_results: List[BatchFileResult] = field(default_factory=list)
 
 
@@ -55,6 +56,12 @@ class BatchCompressWorker(QThread):
         total = len(self._file_paths)
         batch_result = BatchCompressResult(total_files=total)
 
+        # Create a shared output subfolder next to the first input file
+        first_dir = os.path.dirname(self._file_paths[0])
+        output_dir = os.path.join(first_dir, "compressed")
+        os.makedirs(output_dir, exist_ok=True)
+        batch_result.output_folder = output_dir
+
         try:
             for i, path in enumerate(self._file_paths):
                 if self._cancelled:
@@ -63,7 +70,16 @@ class BatchCompressWorker(QThread):
                 name = os.path.basename(path)
                 self.file_started.emit(i, name)
 
-                output_path = get_output_path(path)
+                # Save to compressed/ subfolder with original filename
+                output_path = os.path.join(output_dir, name)
+                # Avoid overwriting if same name exists
+                if os.path.exists(output_path):
+                    stem, ext = os.path.splitext(name)
+                    counter = 1
+                    while os.path.exists(output_path):
+                        output_path = os.path.join(output_dir, f"{stem}({counter}){ext}")
+                        counter += 1
+
                 config = CompressionConfig(
                     input_path=path,
                     output_path=output_path,

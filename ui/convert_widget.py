@@ -4,7 +4,7 @@ import os
 from PyQt6.QtWidgets import (
     QWidget, QVBoxLayout, QHBoxLayout, QLabel, QPushButton, QMessageBox,
     QRadioButton, QButtonGroup, QGroupBox, QLineEdit, QCheckBox,
-    QFileDialog, QScrollArea,
+    QFileDialog, QScrollArea, QSlider,
 )
 from PyQt6.QtCore import Qt
 
@@ -61,7 +61,7 @@ class ConvertWidget(QWidget):
 
         self._mode_group = QButtonGroup(self)
         self._simple_radio = QRadioButton("Simple — Direct conversion to PDF")
-        self._branded_radio = QRadioButton("Branded — Cover page, 2 slides per page, watermark")
+        self._branded_radio = QRadioButton("Branded — Cover page, custom layout, watermark")
         self._simple_radio.setChecked(True)
         self._mode_group.addButton(self._simple_radio, 0)
         self._mode_group.addButton(self._branded_radio, 1)
@@ -72,6 +72,14 @@ class ConvertWidget(QWidget):
         # Branded options (hidden by default)
         self._branded_options = QGroupBox("Branded PDF Options")
         branded_layout = QVBoxLayout(self._branded_options)
+
+        # Brand name
+        brand_row = QHBoxLayout()
+        brand_row.addWidget(QLabel("Brand Name:"))
+        self._brand_input = QLineEdit()
+        self._brand_input.setPlaceholderText("e.g., PrepLadder, MyCompany (optional)")
+        brand_row.addWidget(self._brand_input)
+        branded_layout.addLayout(brand_row)
 
         # Subject name
         row1 = QHBoxLayout()
@@ -86,9 +94,39 @@ class ConvertWidget(QWidget):
         row2 = QHBoxLayout()
         row2.addWidget(QLabel("Watermark Text:"))
         self._watermark_input = QLineEdit()
-        self._watermark_input.setText("PREPLADDER")
+        self._watermark_input.setPlaceholderText("e.g., CONFIDENTIAL, MyBrand (optional)")
         row2.addWidget(self._watermark_input)
         branded_layout.addLayout(row2)
+
+        # Watermark opacity
+        opacity_row = QHBoxLayout()
+        opacity_row.addWidget(QLabel("Watermark Opacity:"))
+        self._opacity_slider = QSlider(Qt.Orientation.Horizontal)
+        self._opacity_slider.setMinimum(1)
+        self._opacity_slider.setMaximum(100)
+        self._opacity_slider.setValue(6)
+        self._opacity_slider.setTickInterval(10)
+        self._opacity_label = QLabel("6%")
+        self._opacity_label.setFixedWidth(40)
+        self._opacity_slider.valueChanged.connect(
+            lambda v: self._opacity_label.setText(f"{v}%")
+        )
+        opacity_row.addWidget(self._opacity_slider)
+        opacity_row.addWidget(self._opacity_label)
+        branded_layout.addLayout(opacity_row)
+
+        # Page format
+        format_row = QHBoxLayout()
+        format_row.addWidget(QLabel("Page Format:"))
+        self._format_group = QButtonGroup(self)
+        self._portrait_radio = QRadioButton("A4 Portrait (2 slides/page)")
+        self._landscape_radio = QRadioButton("A4 Landscape (1 slide/page)")
+        self._portrait_radio.setChecked(True)
+        self._format_group.addButton(self._portrait_radio, 0)
+        self._format_group.addButton(self._landscape_radio, 1)
+        format_row.addWidget(self._portrait_radio)
+        format_row.addWidget(self._landscape_radio)
+        branded_layout.addLayout(format_row)
 
         # Cover page checkbox
         self._cover_check = QCheckBox("Include cover page")
@@ -215,14 +253,20 @@ class ConvertWidget(QWidget):
 
         if branded:
             subject = self._subject_input.text().strip() or "Subject"
-            watermark = self._watermark_input.text().strip() or "PREPLADDER"
+            watermark = self._watermark_input.text().strip()
+            brand_name = self._brand_input.text().strip()
+            orientation = "landscape" if self._landscape_radio.isChecked() else "portrait"
+            opacity = self._opacity_slider.value() / 100.0
             branding_config = BrandingConfig(
                 input_pdf_path="",  # Will be set by worker
                 output_path="",     # Will be set by worker
                 subject_name=subject,
                 watermark_text=watermark,
+                watermark_opacity=opacity,
                 include_cover=self._cover_check.isChecked(),
                 cover_image_path=self._cover_image_path or None,
+                brand_name=brand_name,
+                page_orientation=orientation,
             )
 
         self._convert_btn.setEnabled(False)
@@ -306,4 +350,7 @@ class ConvertWidget(QWidget):
     def cleanup(self):
         if self._worker and self._worker.isRunning():
             self._worker.cancel()
-            self._worker.wait(5000)
+            if not self._worker.wait(5000):
+                self._worker.terminate()
+                self._worker.wait(2000)
+        self._worker = None

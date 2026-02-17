@@ -229,14 +229,16 @@ class MainWindow(QMainWindow):
 
     def closeEvent(self, event):
         """Clean up workers on close."""
-        self._compress_widget.cleanup()
-        self._batch_compress_widget.cleanup()
-        self._merge_widget.cleanup()
-        self._split_widget.cleanup()
-        self._protect_widget.cleanup()
-        self._watermark_widget.cleanup()
-        self._image_to_pdf_widget.cleanup()
-        self._pdf_to_image_widget.cleanup()
-        self._convert_widget.cleanup()
-        self._ocr_widget.cleanup()
+        widgets = [
+            self._compress_widget, self._batch_compress_widget,
+            self._merge_widget, self._split_widget,
+            self._protect_widget, self._watermark_widget,
+            self._image_to_pdf_widget, self._pdf_to_image_widget,
+            self._convert_widget, self._ocr_widget,
+        ]
+        for w in widgets:
+            w.cleanup()
+        # Process any pending signals (finished, deleteLater, etc.)
+        from PyQt6.QtWidgets import QApplication
+        QApplication.processEvents()
         event.accept()

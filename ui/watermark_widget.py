@@ -1,12 +1,16 @@
 """PDF Watermark tab widget."""
 
+import io
 import os
+import fitz
+from PIL import Image as PILImage, ImageEnhance
 from PyQt6.QtWidgets import (
     QWidget, QVBoxLayout, QHBoxLayout, QLabel, QPushButton, QMessageBox,
     QScrollArea, QGroupBox, QRadioButton, QButtonGroup, QLineEdit,
     QComboBox, QSpinBox, QDoubleSpinBox, QSlider, QFileDialog,
 )
 from PyQt6.QtCore import Qt
+from PyQt6.QtGui import QImage, QPixmap
 
 from ui.components.drop_zone import DropZone
 from ui.components.progress_widget import ProgressWidget
@@ -162,6 +166,19 @@ class WatermarkWidget(QWidget):
         img_row3.addStretch()
         img_layout.addLayout(img_row3)
 
+        # Live preview
+        preview_header = QLabel("Preview (page 1)")
+        preview_header.setProperty("class", "textCaption")
+        img_layout.addWidget(preview_header)
+
+        self._preview_label = QLabel("Select a PDF and watermark image to see preview")
+        self._preview_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        self._preview_label.setMinimumHeight(300)
+        self._preview_label.setStyleSheet(
+            "border: 1px solid #555; border-radius: 4px; padding: 8px; background: #1e1e1e;"
+        )
+        img_layout.addWidget(self._preview_label)
+
         self._image_options.hide()
         layout.addWidget(self._image_options)
 
@@ -195,6 +212,9 @@ class WatermarkWidget(QWidget):
             lambda v: self._opacity_label.setText(f"{v}%")
         )
         self._img_select_btn.clicked.connect(self._select_image)
+        self._img_scale_spin.valueChanged.connect(self._update_preview)
+        self._img_opacity_spin.valueChanged.connect(self._update_preview)
+        self._position_combo.currentIndexChanged.connect(self._update_preview)
         self._watermark_btn.clicked.connect(self._on_watermark_clicked)
         self._progress.cancel_clicked.connect(self._on_cancel_clicked)
         self._result_card.compress_another.connect(self._on_another)
@@ -206,6 +226,7 @@ class WatermarkWidget(QWidget):
         else:
             self._text_options.hide()
             self._image_options.show()
+            self._update_preview()
 
     def _select_image(self):
         path, _ = QFileDialog.getOpenFileName(
@@ -215,6 +236,7 @@ class WatermarkWidget(QWidget):
         if path:
             self._watermark_image = path
             self._img_path_label.setText(os.path.basename(path))
+            self._update_preview()
 
     def _on_file_selected(self, file_path: str):
         result = validate_pdf(file_path)
@@ -227,6 +249,7 @@ class WatermarkWidget(QWidget):
         self._watermark_btn.setEnabled(True)
         self._result_card.reset()
         self._progress.reset()
+        self._update_preview()
 
     def _on_file_removed(self):
         self._current_file = ""
@@ -253,6 +276,69 @@ class WatermarkWidget(QWidget):
             "Bottom Right": "bottom-right",
         }
         return pos_map.get(self._position_combo.currentText(), "center")
+
+    def _update_preview(self):
+        """Render a live preview of the image watermark on page 1."""
+        if not self._current_file or not self._watermark_image or not self._image_radio.isChecked():
+            return
+
+        try:
+            # Render page 1 of the PDF
+            doc = fitz.open(self._current_file)
+            page = doc[0]
+            preview_width = 450
+            zoom = preview_width / page.rect.width
+            mat = fitz.Matrix(zoom, zoom)
+            pix = page.get_pixmap(matrix=mat)
+            base = PILImage.frombytes("RGB", [pix.width, pix.height], pix.samples)
+            doc.close()
+
+            # Open and scale watermark image
+            wm = PILImage.open(self._watermark_image).convert("RGBA")
+            scale = self._img_scale_spin.value()
+            wm_w = int(base.width * scale)
+            wm_h = int(wm_w * wm.height / wm.width)
+            if wm_w < 1 or wm_h < 1:
+                return
+            wm = wm.resize((wm_w, wm_h), PILImage.LANCZOS)
+
+            # Apply opacity to alpha channel
+            opacity = self._img_opacity_spin.value()
+            alpha = wm.split()[3]
+            alpha = ImageEnhance.Brightness(alpha).enhance(opacity)
+            wm.putalpha(alpha)
+
+            # Calculate position (same logic as PDFWatermarker._get_position)
+            position = self._get_position_str()
+            margin = int(36 * zoom)
+            bw, bh = base.size
+            if position == "top-left":
+                x, y = margin, margin
+            elif position == "top-right":
+                x, y = bw - wm_w - margin, margin
+            elif position == "bottom-left":
+                x, y = margin, bh - wm_h - margin
+            elif position == "bottom-right":
+                x, y = bw - wm_w - margin, bh - wm_h - margin
+            else:  # center
+                x, y = (bw - wm_w) // 2, (bh - wm_h) // 2
+
+            # Composite
+            base = base.convert("RGBA")
+            base.paste(wm, (x, y), wm)
+            result = base.convert("RGB")
+
+            # Convert to QPixmap
+            buf = io.BytesIO()
+            result.save(buf, format="PNG")
+            qimg = QImage()
+            qimg.loadFromData(buf.getvalue())
+            pixmap = QPixmap.fromImage(qimg)
+            self._preview_label.setPixmap(pixmap)
+            self._preview_label.setMinimumHeight(pixmap.height())
+
+        except Exception as e:
+            self._preview_label.setText(f"Preview error: {e}")
 
     def _on_watermark_clicked(self):
         if not self._current_file:
@@ -346,9 +432,14 @@ class WatermarkWidget(QWidget):
         self._current_file = ""
         self._watermark_image = ""
         self._img_path_label.setText("No image selected")
+        self._preview_label.setText("Select a PDF and watermark image to see preview")
+        self._preview_label.setPixmap(QPixmap())
         self._watermark_btn.setEnabled(False)
 
     def cleanup(self):
         if self._worker and self._worker.isRunning():
             self._worker.cancel()
-            self._worker.wait(5000)
+            if not self._worker.wait(5000):
+                self._worker.terminate()
+                self._worker.wait(2000)
+        self._worker = None
