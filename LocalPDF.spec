@@ -34,6 +34,12 @@ def find_pyqt6_plugins():
 
 pyqt6_plugins = find_pyqt6_plugins()
 
+# Platform-specific icon
+if sys.platform == 'win32':
+    app_icon = str(ROOT / 'assets' / 'icon.ico')
+else:
+    app_icon = str(ROOT / 'assets' / 'icon.icns')
+
 # Collect data files
 datas = [
     (str(ROOT / 'core'), 'core'),
@@ -60,10 +66,10 @@ hiddenimports = [
     'core.pdf_to_image',
     'core.protector',
     'core.watermark',
-    'core.ocr',
     'core.branded_pdf',
     'core.utils',
     'core.libreoffice_installer',
+    'core.page_manager',
 
     # UI modules
     'ui',
@@ -77,9 +83,24 @@ hiddenimports = [
     'ui.image_to_pdf_widget',
     'ui.pdf_to_image_widget',
     'ui.convert_widget',
-    'ui.ocr_widget',
     'ui.settings_widget',
     'ui.theme',
+    'ui.page_manager_widget',
+    'ui.eraser_dialog',
+    'ui.add_text_dialog',
+    'ui.add_image_dialog',
+    'ui.signature_dialog',
+    'ui.manage_annotations_dialog',
+    'ui.insert_pages_dialog',
+    'ui.page_preview_dialog',
+    'ui.edit_view_widget',
+    'ui.components',
+    'ui.components.drop_zone',
+    'ui.components.file_size_input',
+    'ui.components.multi_drop_zone',
+    'ui.components.progress_widget',
+    'ui.components.result_card',
+    'ui.components.file_list_widget',
 
     # Workers
     'workers',
@@ -92,8 +113,8 @@ hiddenimports = [
     'workers.watermark_worker',
     'workers.image_to_pdf_worker',
     'workers.convert_worker',
-    'workers.ocr_worker',
     'workers.libreoffice_install_worker',
+    'workers.page_manager_worker',
 
     # PDF libraries
     'fitz',  # PyMuPDF
@@ -102,9 +123,6 @@ hiddenimports = [
     'reportlab',
     'reportlab.lib',
     'reportlab.pdfgen',
-
-    # OCR
-    'pytesseract',
 ]
 
 # Exclude unnecessary modules
@@ -156,6 +174,7 @@ exe = EXE(
     target_arch=None,
     codesign_identity=None,
     entitlements_file=None,
+    icon=app_icon,
 )
 
 coll = COLLECT(
@@ -169,36 +188,37 @@ coll = COLLECT(
     name='LocalPDF',
 )
 
-# macOS app bundle
-app = BUNDLE(
-    coll,
-    name='LocalPDF.app',
-    icon='assets/icon.icns',
-    bundle_identifier='ai.localpdf.desktop',
-    info_plist={
-        'CFBundleName': 'LocalPDF',
-        'CFBundleDisplayName': 'LocalPDF',
-        'CFBundleVersion': '1.0.0',
-        'CFBundleShortVersionString': '1.0.0',
-        'CFBundleExecutable': 'LocalPDF',
-        'CFBundleIdentifier': 'ai.localpdf.desktop',
-        'NSHighResolutionCapable': True,
-        'NSRequiresAquaSystemAppearance': False,
-        'LSMinimumSystemVersion': '11.0',
-        'CFBundleDocumentTypes': [
-            {
-                'CFBundleTypeName': 'PDF Document',
-                'CFBundleTypeExtensions': ['pdf'],
-                'CFBundleTypeRole': 'Editor',
-                'LSHandlerRank': 'Alternate',
-            },
-        ],
-        'NSDesktopFolderUsageDescription': 'LocalPDF needs access to save processed documents.',
-        'NSDocumentsFolderUsageDescription': 'LocalPDF needs access to open and save documents.',
-        'NSDownloadsFolderUsageDescription': 'LocalPDF needs access to save processed documents.',
-        'LSApplicationCategoryType': 'public.app-category.productivity',
-        'NSPrincipalClass': 'NSApplication',
-        'NSHumanReadableCopyright': 'Copyright © 2025 Svetozar Technologies. MIT License.',
-        'CFBundleGetInfoString': 'LocalPDF - Private PDF Tools. 100% Offline.',
-    },
-)
+# macOS app bundle (skip on Windows)
+if sys.platform == 'darwin':
+    app = BUNDLE(
+        coll,
+        name='LocalPDF.app',
+        icon='assets/icon.icns',
+        bundle_identifier='ai.localpdf.desktop',
+        info_plist={
+            'CFBundleName': 'LocalPDF',
+            'CFBundleDisplayName': 'LocalPDF',
+            'CFBundleVersion': '1.0.0',
+            'CFBundleShortVersionString': '1.0.0',
+            'CFBundleExecutable': 'LocalPDF',
+            'CFBundleIdentifier': 'ai.localpdf.desktop',
+            'NSHighResolutionCapable': True,
+            'NSRequiresAquaSystemAppearance': False,
+            'LSMinimumSystemVersion': '11.0',
+            'CFBundleDocumentTypes': [
+                {
+                    'CFBundleTypeName': 'PDF Document',
+                    'CFBundleTypeExtensions': ['pdf'],
+                    'CFBundleTypeRole': 'Editor',
+                    'LSHandlerRank': 'Alternate',
+                },
+            ],
+            'NSDesktopFolderUsageDescription': 'LocalPDF needs access to save processed documents.',
+            'NSDocumentsFolderUsageDescription': 'LocalPDF needs access to open and save documents.',
+            'NSDownloadsFolderUsageDescription': 'LocalPDF needs access to save processed documents.',
+            'LSApplicationCategoryType': 'public.app-category.productivity',
+            'NSPrincipalClass': 'NSApplication',
+            'NSHumanReadableCopyright': 'Copyright © 2025 Svetozar Technologies. MIT License.',
+            'CFBundleGetInfoString': 'LocalPDF - Private PDF Tools. 100% Offline.',
+        },
+    )
