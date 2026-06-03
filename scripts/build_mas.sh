@@ -108,16 +108,22 @@ else
 fi
 
 # ---- 4. Sign every Mach-O binary inside the bundle --------------------------
-# Apple's rule: sign nested code before the outer container. -depth gives
-# post-order traversal so frameworks/dylibs deep in the tree are signed
-# before any of their parents. Skip the main executable — when we sign the
-# .app itself in step 5, codesign signs the main exec as part of that.
+# Apple's rule: sign nested code before the outer container. We do this in
+# two phases:
+#   Phase 1 — loose Mach-O files (dylibs, .so, executables). Use depth-first
+#             traversal. Skip the .app main executable (handled by signing
+#             the .app), and skip files immediately inside a *.framework
+#             directory (those are framework main binaries — codesign errors
+#             with "bundle format is ambiguous" if signed by file path).
+#   Phase 2 — sign each *.framework directory as a bundle, deepest first.
 echo ""
-echo "==> Signing nested binaries..."
+echo "==> Signing nested binaries (phase 1)..."
 MAIN_EXEC="$APP/Contents/MacOS/LocalPDF"
 SIGN_COUNT=0
 while IFS= read -r -d '' target; do
-    if [ "$target" = "$MAIN_EXEC" ]; then
+    [ "$target" = "$MAIN_EXEC" ] && continue
+    parent_base=$(basename "$(dirname "$target")")
+    if [[ "$parent_base" == *.framework ]]; then
         continue
     fi
     if file "$target" 2>/dev/null | grep -q "Mach-O"; then
@@ -128,7 +134,19 @@ while IFS= read -r -d '' target; do
         SIGN_COUNT=$((SIGN_COUNT + 1))
     fi
 done < <(find "$APP/Contents" -depth -type f -print0)
-echo "    Signed $SIGN_COUNT nested Mach-O files."
+echo "    Signed $SIGN_COUNT loose Mach-O files."
+
+echo ""
+echo "==> Signing frameworks (phase 2)..."
+FW_COUNT=0
+while IFS= read -r -d '' fw; do
+    codesign --force --options runtime --timestamp \
+        --sign "$LOCALPDF_APP_IDENTITY" \
+        --entitlements "$ENTITLEMENTS" \
+        "$fw" >/dev/null
+    FW_COUNT=$((FW_COUNT + 1))
+done < <(find "$APP/Contents" -depth -name "*.framework" -type d -print0)
+echo "    Signed $FW_COUNT frameworks."
 
 # ---- 5. Sign the outer .app ------------------------------------------------
 echo ""

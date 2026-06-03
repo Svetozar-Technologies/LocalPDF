@@ -198,19 +198,28 @@ jobs:
           echo "$PROFILE_B64" | base64 --decode > "dist/LocalPDF.app/Contents/embedded.provisionprofile"
           ls -la dist/LocalPDF.app/Contents/embedded.provisionprofile
 
-      - name: Sign every Mach-O binary in the universal2 bundle
+      - name: Sign nested Mach-O binaries and frameworks
         env:
           APP_ID: ${{ secrets.MAS_APP_IDENTITY }}
         run: |
           set -euo pipefail
           ENT="$GITHUB_WORKSPACE/assets/entitlements/mas.entitlements"
-          MAIN_EXEC="dist/LocalPDF.app/Contents/MacOS/LocalPDF"
+          APP=dist/LocalPDF.app
+          MAIN_EXEC="$APP/Contents/MacOS/LocalPDF"
+
+          # Phase 1: Sign loose Mach-O files (dylibs, .so, executables) using
+          # depth-first traversal. Skip:
+          #   - the .app's main executable (handled by signing the .app)
+          #   - any file directly inside a *.framework directory (handled
+          #     by signing the framework in phase 2; codesign would error
+          #     with "bundle format is ambiguous" if we tried per-file)
+          # Inside frameworks we still sign Mach-O files nested deeper, e.g.
+          # Python.framework/Versions/3.11/lib/lib-dynload/*.so.
           COUNT=0
-          # -depth gives post-order (children before parents) so nested
-          # frameworks and dylibs are signed before the top-level binary.
-          # Skip the main executable — codesign on the .app handles it.
           while IFS= read -r -d '' f; do
-              if [ "$f" = "$MAIN_EXEC" ]; then
+              [ "$f" = "$MAIN_EXEC" ] && continue
+              parent_base=$(basename "$(dirname "$f")")
+              if [[ "$parent_base" == *.framework ]]; then
                   continue
               fi
               if file "$f" 2>/dev/null | grep -q "Mach-O"; then
@@ -218,8 +227,18 @@ jobs:
                       --sign "$APP_ID" --entitlements "$ENT" "$f" >/dev/null
                   COUNT=$((COUNT + 1))
               fi
-          done < <(find dist/LocalPDF.app/Contents -depth -type f -print0)
-          echo "Signed $COUNT nested Mach-O files."
+          done < <(find "$APP/Contents" -depth -type f -print0)
+          echo "Phase 1: signed $COUNT loose Mach-O files."
+
+          # Phase 2: Sign each *.framework directory as a bundle. Deepest
+          # first via -depth in case frameworks are nested.
+          FW_COUNT=0
+          while IFS= read -r -d '' fw; do
+              codesign --force --options runtime --timestamp \
+                  --sign "$APP_ID" --entitlements "$ENT" "$fw" >/dev/null
+              FW_COUNT=$((FW_COUNT + 1))
+          done < <(find "$APP/Contents" -depth -name "*.framework" -type d -print0)
+          echo "Phase 2: signed $FW_COUNT frameworks."
 
       - name: Sign the outer .app
         env:
