@@ -50,32 +50,42 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        include:
-          - arch: x86_64
-            py_arch: x64
-          - arch: arm64
-            py_arch: arm64
+        arch: [x86_64, arm64]
     runs-on: macos-14
     steps:
       - uses: actions/checkout@v4
 
-      - name: Set up Python (${{ matrix.arch }})
+      - name: Set up Python
         uses: actions/setup-python@v5
         with:
           python-version: '3.11'
-          architecture: ${{ matrix.py_arch }}
 
-      - name: Install dependencies
+      - name: Install dependencies (${{ matrix.arch }})
+        # For x86_64 we run pip under `arch -x86_64` so pip detects the
+        # platform tag as x86_64 and resolves x86_64 wheels (otherwise
+        # universal2 Python on Apple Silicon defaults to arm64 wheels and
+        # PyInstaller later errors with IncompatibleBinaryArchError).
         run: |
-          python -m pip install --upgrade pip
-          pip install -r requirements.txt pyinstaller
+          set -euo pipefail
+          if [ "${{ matrix.arch }}" = "x86_64" ]; then
+              arch -x86_64 python -m pip install --upgrade pip
+              arch -x86_64 python -m pip install -r requirements.txt pyinstaller
+          else
+              python -m pip install --upgrade pip
+              pip install -r requirements.txt pyinstaller
+          fi
 
       - name: Build LocalPDF.app (${{ matrix.arch }})
         env:
           LOCALPDF_VERSION: ${{ inputs.version }}
           LOCALPDF_TARGET_ARCH: ${{ matrix.arch }}
         run: |
-          pyinstaller LocalPDF.spec --clean --noconfirm
+          set -euo pipefail
+          if [ "${{ matrix.arch }}" = "x86_64" ]; then
+              arch -x86_64 python -m PyInstaller LocalPDF.spec --clean --noconfirm
+          else
+              pyinstaller LocalPDF.spec --clean --noconfirm
+          fi
           ls -la dist/
 
       - name: Upload .app artifact (${{ matrix.arch }})
