@@ -108,13 +108,18 @@ else
 fi
 
 # ---- 4. Sign every Mach-O binary inside the bundle --------------------------
-# Apple's rule: sign nested code before the outer container. We walk every
-# file under Contents/, identify Mach-O binaries via `file`, and sign each
-# with the Hardened Runtime + sandbox entitlements. Then we sign the .app.
+# Apple's rule: sign nested code before the outer container. -depth gives
+# post-order traversal so frameworks/dylibs deep in the tree are signed
+# before any of their parents. Skip the main executable — when we sign the
+# .app itself in step 5, codesign signs the main exec as part of that.
 echo ""
 echo "==> Signing nested binaries..."
+MAIN_EXEC="$APP/Contents/MacOS/LocalPDF"
 SIGN_COUNT=0
 while IFS= read -r -d '' target; do
+    if [ "$target" = "$MAIN_EXEC" ]; then
+        continue
+    fi
     if file "$target" 2>/dev/null | grep -q "Mach-O"; then
         codesign --force --options runtime --timestamp \
             --sign "$LOCALPDF_APP_IDENTITY" \
@@ -122,8 +127,8 @@ while IFS= read -r -d '' target; do
             "$target" >/dev/null
         SIGN_COUNT=$((SIGN_COUNT + 1))
     fi
-done < <(find "$APP/Contents" -type f -print0)
-echo "    Signed $SIGN_COUNT Mach-O files."
+done < <(find "$APP/Contents" -depth -type f -print0)
+echo "    Signed $SIGN_COUNT nested Mach-O files."
 
 # ---- 5. Sign the outer .app ------------------------------------------------
 echo ""

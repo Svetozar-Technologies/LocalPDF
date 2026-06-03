@@ -204,15 +204,22 @@ jobs:
         run: |
           set -euo pipefail
           ENT="$GITHUB_WORKSPACE/assets/entitlements/mas.entitlements"
+          MAIN_EXEC="dist/LocalPDF.app/Contents/MacOS/LocalPDF"
           COUNT=0
+          # -depth gives post-order (children before parents) so nested
+          # frameworks and dylibs are signed before the top-level binary.
+          # Skip the main executable — codesign on the .app handles it.
           while IFS= read -r -d '' f; do
+              if [ "$f" = "$MAIN_EXEC" ]; then
+                  continue
+              fi
               if file "$f" 2>/dev/null | grep -q "Mach-O"; then
                   codesign --force --options runtime --timestamp \
                       --sign "$APP_ID" --entitlements "$ENT" "$f" >/dev/null
                   COUNT=$((COUNT + 1))
               fi
-          done < <(find dist/LocalPDF.app/Contents -type f -print0)
-          echo "Signed $COUNT Mach-O files."
+          done < <(find dist/LocalPDF.app/Contents -depth -type f -print0)
+          echo "Signed $COUNT nested Mach-O files."
 
       - name: Sign the outer .app
         env:
