@@ -1,24 +1,20 @@
-name: Build MAS .pkg (universal2)
+name: Build MAS .pkg
 
-# Universal2 (arm64 + x86_64) Mac App Store build.
+# Single-arch (x86_64) Mac App Store build. Runs on every Mac:
+# native on Intel, via Rosetta 2 on Apple Silicon (auto-installs).
+# v1.1+ can upgrade to universal2 once PyMuPDF ships universal wheels
+# or we vendor a fat-built dependency.
 #
-# Strategy: PyMuPDF doesn't ship universal2 wheels, so we can't pip-install
-# universal2 directly. Instead we build the .app twice — once per architecture
-# on a matching GitHub runner — then a merge job uses `lipo` to fuse every
-# Mach-O binary into a fat (universal2) version. The merged .app is signed
-# once, and productbuild produces the signed .pkg.
+# Required GitHub Secrets:
+#   MAS_APP_CERT_P12_BASE64
+#   MAS_INSTALLER_CERT_P12_BASE64
+#   MAS_CERT_PASSWORD
+#   MAS_KEYCHAIN_PASSWORD
+#   MAS_PROVISIONING_PROFILE_BASE64
+#   MAS_APP_IDENTITY              "3rd Party Mac Developer Application: Name (TEAMID)"
+#   MAS_INSTALLER_IDENTITY        "3rd Party Mac Developer Installer: Name (TEAMID)"
 #
-# Required GitHub Secrets (Settings → Secrets and variables → Actions):
-#
-#   MAS_APP_CERT_P12_BASE64       — base64 of Mac App Distribution .p12
-#   MAS_INSTALLER_CERT_P12_BASE64 — base64 of Mac Installer Distribution .p12
-#   MAS_CERT_PASSWORD             — password set when exporting the .p12s
-#   MAS_KEYCHAIN_PASSWORD         — any random string for the temp CI keychain
-#   MAS_PROVISIONING_PROFILE_BASE64 — base64 of embedded.provisionprofile
-#   MAS_APP_IDENTITY              — "3rd Party Mac Developer Application: Name (TEAMID)"
-#   MAS_INSTALLER_IDENTITY        — "3rd Party Mac Developer Installer: Name (TEAMID)"
-#
-# Optional (for automatic upload to App Store Connect):
+# Optional:
 #   APPSTORE_API_KEY_ID
 #   APPSTORE_API_ISSUER_ID
 #   APPSTORE_API_PRIVATE_KEY_BASE64
@@ -40,127 +36,33 @@ on:
           - 'true'
 
 jobs:
-  # --------------------------------------------------------------------------
-  # Both arch builds run on macos-14 (Apple Silicon). For the x86_64 build,
-  # actions/setup-python installs an x86_64 Python that runs under Rosetta 2 —
-  # pip then resolves x86_64 wheels and PyInstaller produces an x86_64 .app.
-  # This avoids GitHub's congested macos-13 Intel queue.
-  # --------------------------------------------------------------------------
-  build:
-    strategy:
-      fail-fast: false
-      matrix:
-        arch: [x86_64, arm64]
+  build-mas:
     runs-on: macos-14
     steps:
       - uses: actions/checkout@v4
 
-      - name: Set up Python
+      - name: Set up Python 3.11
         uses: actions/setup-python@v5
         with:
           python-version: '3.11'
 
-      - name: Install dependencies (${{ matrix.arch }})
-        # For x86_64 we run pip under `arch -x86_64` so pip detects the
-        # platform tag as x86_64 and resolves x86_64 wheels (otherwise
-        # universal2 Python on Apple Silicon defaults to arm64 wheels and
-        # PyInstaller later errors with IncompatibleBinaryArchError).
+      - name: Install x86_64 dependencies via Rosetta
+        # `arch -x86_64` forces pip into x86_64 mode so it resolves
+        # x86_64 wheels (the universal2 setup-python Python defaults
+        # to arm64 wheels on Apple Silicon hardware).
         run: |
           set -euo pipefail
-          if [ "${{ matrix.arch }}" = "x86_64" ]; then
-              arch -x86_64 python -m pip install --upgrade pip
-              arch -x86_64 python -m pip install -r requirements.txt pyinstaller
-          else
-              python -m pip install --upgrade pip
-              pip install -r requirements.txt pyinstaller
-          fi
+          arch -x86_64 python -m pip install --upgrade pip
+          arch -x86_64 python -m pip install -r requirements.txt pyinstaller
 
-      - name: Build LocalPDF.app (${{ matrix.arch }})
+      - name: Build LocalPDF.app (x86_64)
         env:
           LOCALPDF_VERSION: ${{ inputs.version }}
-          LOCALPDF_TARGET_ARCH: ${{ matrix.arch }}
+          LOCALPDF_TARGET_ARCH: x86_64
         run: |
           set -euo pipefail
-          if [ "${{ matrix.arch }}" = "x86_64" ]; then
-              arch -x86_64 python -m PyInstaller LocalPDF.spec --clean --noconfirm
-          else
-              pyinstaller LocalPDF.spec --clean --noconfirm
-          fi
+          arch -x86_64 python -m PyInstaller LocalPDF.spec --clean --noconfirm
           ls -la dist/
-
-      - name: Upload .app artifact (${{ matrix.arch }})
-        uses: actions/upload-artifact@v4
-        with:
-          name: LocalPDF-${{ matrix.arch }}-app
-          path: dist/LocalPDF.app
-          retention-days: 7
-          include-hidden-files: true
-          if-no-files-found: error
-
-  # --------------------------------------------------------------------------
-  # Merge + sign + .pkg on Apple Silicon runner.
-  # --------------------------------------------------------------------------
-  merge-sign:
-    needs: build
-    runs-on: macos-14
-    steps:
-      - uses: actions/checkout@v4
-
-      - name: Download arm64 .app
-        uses: actions/download-artifact@v4
-        with:
-          name: LocalPDF-arm64-app
-          path: arm64-build/LocalPDF.app
-
-      - name: Download x86_64 .app
-        uses: actions/download-artifact@v4
-        with:
-          name: LocalPDF-x86_64-app
-          path: x86_64-build/LocalPDF.app
-
-      - name: Merge into universal2 with lipo
-        run: |
-          set -euo pipefail
-          mkdir -p dist
-
-          # Start from arm64 as the base (any non-Mach-O files come from here).
-          cp -R arm64-build/LocalPDF.app dist/LocalPDF.app
-
-          # Also copy any x86_64-only files (rare, but defends against arch-
-          # specific wheel contents).
-          rsync -a --ignore-existing x86_64-build/LocalPDF.app/ dist/LocalPDF.app/
-
-          MERGED=0
-          SINGLE=0
-          while IFS= read -r -d '' arm_file; do
-              rel="${arm_file#dist/LocalPDF.app/}"
-              x86_file="x86_64-build/LocalPDF.app/$rel"
-
-              if [ ! -f "$x86_file" ]; then
-                  continue
-              fi
-
-              # Only lipo Mach-O binaries. Skip identical files (text, etc.).
-              if file "$arm_file" 2>/dev/null | grep -q "Mach-O" \
-                 && file "$x86_file" 2>/dev/null | grep -q "Mach-O"; then
-                  if cmp -s "$arm_file" "$x86_file"; then
-                      # Already byte-identical (rare for binaries) — leave alone.
-                      SINGLE=$((SINGLE + 1))
-                      continue
-                  fi
-                  if lipo -create "$arm_file" "$x86_file" -output "$arm_file.universal" 2>/dev/null; then
-                      mv "$arm_file.universal" "$arm_file"
-                      MERGED=$((MERGED + 1))
-                  else
-                      echo "::warning::lipo failed for $rel — keeping arm64 version"
-                  fi
-              fi
-          done < <(find dist/LocalPDF.app/Contents -type f -print0)
-
-          echo "Universal2 merge complete: $MERGED Mach-O files merged, $SINGLE identical, others copied as-is."
-
-          # Sanity-check the main executable is now universal.
-          lipo -info dist/LocalPDF.app/Contents/MacOS/LocalPDF
 
       - name: Import signing certificates
         env:
@@ -207,14 +109,9 @@ jobs:
           APP=dist/LocalPDF.app
           MAIN_EXEC="$APP/Contents/MacOS/LocalPDF"
 
-          # Phase 1: Sign loose Mach-O files (dylibs, .so, executables) using
-          # depth-first traversal. Skip:
-          #   - the .app's main executable (handled by signing the .app)
-          #   - any file directly inside a *.framework directory (handled
-          #     by signing the framework in phase 2; codesign would error
-          #     with "bundle format is ambiguous" if we tried per-file)
-          # Inside frameworks we still sign Mach-O files nested deeper, e.g.
-          # Python.framework/Versions/3.11/lib/lib-dynload/*.so.
+          # Phase 1: Sign loose Mach-O files (dylibs, .so, executables).
+          # Skip the .app main executable and any file immediately inside a
+          # *.framework directory.
           COUNT=0
           while IFS= read -r -d '' f; do
               [ "$f" = "$MAIN_EXEC" ] && continue
@@ -230,12 +127,17 @@ jobs:
           done < <(find "$APP/Contents" -depth -type f -print0)
           echo "Phase 1: signed $COUNT loose Mach-O files."
 
-          # Phase 2: Sign each *.framework directory as a bundle. Deepest
-          # first via -depth in case frameworks are nested.
+          # Phase 2: Sign each *.framework as a bundle, deepest first.
+          # Pass --identifier explicitly so codesign doesn't get confused
+          # by PyInstaller's stripped-down framework layout.
           FW_COUNT=0
           while IFS= read -r -d '' fw; do
+              fw_name=$(basename "$fw" .framework)
+              fw_id="ai.localpdf.framework.${fw_name}"
               codesign --force --options runtime --timestamp \
-                  --sign "$APP_ID" --entitlements "$ENT" "$fw" >/dev/null
+                  --sign "$APP_ID" --entitlements "$ENT" \
+                  --identifier "$fw_id" \
+                  "$fw" >/dev/null
               FW_COUNT=$((FW_COUNT + 1))
           done < <(find "$APP/Contents" -depth -name "*.framework" -type d -print0)
           echo "Phase 2: signed $FW_COUNT frameworks."
@@ -272,17 +174,9 @@ jobs:
       - name: Upload .pkg artifact
         uses: actions/upload-artifact@v4
         with:
-          name: LocalPDF-${{ inputs.version }}-universal2-mas
+          name: LocalPDF-${{ inputs.version }}-mas
           path: dist/LocalPDF-*-mas.pkg
           retention-days: 30
-
-      - name: Upload .app artifact (for screenshots)
-        uses: actions/upload-artifact@v4
-        with:
-          name: LocalPDF-${{ inputs.version }}-universal2-app
-          path: dist/LocalPDF.app
-          retention-days: 14
-          include-hidden-files: true
 
       - name: Upload to App Store Connect
         if: inputs.upload_to_app_store == 'true'
