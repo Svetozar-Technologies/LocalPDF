@@ -41,25 +41,29 @@ on:
 
 jobs:
   # --------------------------------------------------------------------------
-  # Two parallel builds: arm64 on macos-14, x86_64 on macos-13.
+  # Both arch builds run on macos-14 (Apple Silicon). For the x86_64 build,
+  # actions/setup-python installs an x86_64 Python that runs under Rosetta 2 —
+  # pip then resolves x86_64 wheels and PyInstaller produces an x86_64 .app.
+  # This avoids GitHub's congested macos-13 Intel queue.
   # --------------------------------------------------------------------------
   build:
     strategy:
       fail-fast: false
       matrix:
         include:
-          - runner: macos-13     # Intel
-            arch: x86_64
-          - runner: macos-14     # Apple Silicon
-            arch: arm64
-    runs-on: ${{ matrix.runner }}
+          - arch: x86_64
+            py_arch: x64
+          - arch: arm64
+            py_arch: arm64
+    runs-on: macos-14
     steps:
       - uses: actions/checkout@v4
 
-      - name: Set up Python
+      - name: Set up Python (${{ matrix.arch }})
         uses: actions/setup-python@v5
         with:
           python-version: '3.11'
+          architecture: ${{ matrix.py_arch }}
 
       - name: Install dependencies
         run: |
@@ -81,6 +85,7 @@ jobs:
           path: dist/LocalPDF.app
           retention-days: 7
           include-hidden-files: true
+          if-no-files-found: error
 
   # --------------------------------------------------------------------------
   # Merge + sign + .pkg on Apple Silicon runner.
