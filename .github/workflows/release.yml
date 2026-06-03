@@ -4,7 +4,7 @@ on:
   workflow_dispatch:
     inputs:
       version:
-        description: 'Release version (e.g. 1.2.0)'
+        description: 'Release version (e.g. 2.0.0)'
         required: true
   push:
     tags:
@@ -14,8 +14,28 @@ permissions:
   contents: write
 
 jobs:
+  resolve-version:
+    runs-on: ubuntu-latest
+    outputs:
+      version: ${{ steps.v.outputs.version }}
+      tag: ${{ steps.v.outputs.tag }}
+    steps:
+      - id: v
+        run: |
+          if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
+            VER="${{ github.event.inputs.version }}"
+          else
+            # refs/tags/v2.0.0 -> 2.0.0
+            VER="${GITHUB_REF_NAME#v}"
+          fi
+          echo "version=$VER" >> "$GITHUB_OUTPUT"
+          echo "tag=v$VER"     >> "$GITHUB_OUTPUT"
+
   build-macos:
+    needs: resolve-version
     runs-on: macos-latest
+    env:
+      LOCALPDF_VERSION: ${{ needs.resolve-version.outputs.version }}
     steps:
       - uses: actions/checkout@v4
 
@@ -28,7 +48,7 @@ jobs:
         run: pip install -r requirements.txt pyinstaller
 
       - name: Build app
-        run: pyinstaller LocalPDF.spec --clean
+        run: pyinstaller LocalPDF.spec --clean --noconfirm
 
       - name: Create DMG
         run: bash scripts/create_dmg.sh
@@ -40,7 +60,10 @@ jobs:
           path: dist/LocalPDF-*.dmg
 
   build-windows:
+    needs: resolve-version
     runs-on: windows-latest
+    env:
+      LOCALPDF_VERSION: ${{ needs.resolve-version.outputs.version }}
     steps:
       - uses: actions/checkout@v4
 
@@ -56,19 +79,25 @@ jobs:
         run: python scripts/generate_ico.py
 
       - name: Build app
-        run: pyinstaller LocalPDF.spec --clean
+        run: pyinstaller LocalPDF.spec --clean --noconfirm
 
       - name: Zip Windows build
-        run: Compress-Archive -Path dist/LocalPDF/* -DestinationPath dist/LocalPDF-Windows.zip
+        shell: pwsh
+        run: |
+          $ver = $env:LOCALPDF_VERSION
+          Compress-Archive -Path dist/LocalPDF/* -DestinationPath "dist/LocalPDF-$ver-Windows.zip"
 
       - name: Upload ZIP
         uses: actions/upload-artifact@v4
         with:
           name: LocalPDF-Windows
-          path: dist/LocalPDF-Windows.zip
+          path: dist/LocalPDF-*-Windows.zip
 
   build-linux:
+    needs: resolve-version
     runs-on: ubuntu-22.04
+    env:
+      LOCALPDF_VERSION: ${{ needs.resolve-version.outputs.version }}
     steps:
       - uses: actions/checkout@v4
 
@@ -86,19 +115,19 @@ jobs:
         run: pip install -r requirements.txt pyinstaller
 
       - name: Build app
-        run: pyinstaller LocalPDF.spec --clean
+        run: pyinstaller LocalPDF.spec --clean --noconfirm
 
       - name: Create tarball
-        run: tar -czf dist/LocalPDF-Linux.tar.gz -C dist LocalPDF
+        run: tar -czf "dist/LocalPDF-${LOCALPDF_VERSION}-Linux.tar.gz" -C dist LocalPDF
 
       - name: Upload tarball
         uses: actions/upload-artifact@v4
         with:
           name: LocalPDF-Linux
-          path: dist/LocalPDF-Linux.tar.gz
+          path: dist/LocalPDF-*-Linux.tar.gz
 
   release:
-    needs: [build-macos, build-windows, build-linux]
+    needs: [resolve-version, build-macos, build-windows, build-linux]
     runs-on: ubuntu-latest
     if: startsWith(github.ref, 'refs/tags/v') || github.event_name == 'workflow_dispatch'
     steps:
@@ -123,11 +152,7 @@ jobs:
       - name: Determine version
         id: version
         run: |
-          if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
-            echo "tag=v${{ github.event.inputs.version }}" >> $GITHUB_OUTPUT
-          else
-            echo "tag=${{ github.ref_name }}" >> $GITHUB_OUTPUT
-          fi
+          echo "tag=${{ needs.resolve-version.outputs.tag }}" >> $GITHUB_OUTPUT
 
       - name: Create GitHub Release
         uses: softprops/action-gh-release@v2

@@ -3,7 +3,10 @@
 set -e
 
 APP_NAME="LocalPDF"
-DMG_NAME="LocalPDF-1.2.0-macOS"
+# Version read from env so CI can drive it; defaults to a sensible value
+# for local builds.
+LOCALPDF_VERSION="${LOCALPDF_VERSION:-2.0.0}"
+DMG_NAME="LocalPDF-${LOCALPDF_VERSION}-macOS"
 DIST_DIR="$(cd "$(dirname "$0")/.." && pwd)/dist"
 APP_PATH="${DIST_DIR}/${APP_NAME}.app"
 DMG_PATH="${DIST_DIR}/${DMG_NAME}.dmg"

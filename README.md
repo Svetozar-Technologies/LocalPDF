@@ -6,11 +6,7 @@ Your documents deserve privacy. LocalPDF compresses, merges, splits, protects, w
 
 ## Download
 
-| Platform | Download |
-|---|---|
-| macOS | [LocalPDF-1.2.0-macOS.dmg](https://github.com/Svetozar-Technologies/LocalPDF/releases/latest/download/LocalPDF-1.2.0-macOS.dmg) |
-| Windows | [LocalPDF-Windows.zip](https://github.com/Svetozar-Technologies/LocalPDF/releases/latest/download/LocalPDF-Windows.zip) |
-| Linux | [LocalPDF-Linux.tar.gz](https://github.com/Svetozar-Technologies/LocalPDF/releases/latest/download/LocalPDF-Linux.tar.gz) |
+Grab the latest build from the [Releases page](https://github.com/Svetozar-Technologies/LocalPDF/releases/latest) — one `.dmg`, `.zip`, and `.tar.gz` per release.
 
 ## Why LocalPDF?
 
