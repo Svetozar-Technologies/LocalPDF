@@ -1,9 +1,10 @@
 name: Build MAS .pkg
 
-# Single-arch (x86_64) Mac App Store build. Runs on every Mac:
-# native on Intel, via Rosetta 2 on Apple Silicon (auto-installs).
-# v1.1+ can upgrade to universal2 once PyMuPDF ships universal wheels
-# or we vendor a fat-built dependency.
+# arm64 Mac App Store build. Apple requires arm64 for new MAS submissions;
+# universal2 is preferred but PyMuPDF lacks universal wheels and our
+# lipo-merge attempt corrupted Python.framework's structure. arm64 alone
+# satisfies the requirement and works on every Apple Silicon Mac (~95%
+# of Macs sold since 2020). v1.1+ revisits universal2.
 #
 # Required GitHub Secrets:
 #   MAS_APP_CERT_P12_BASE64
@@ -46,22 +47,19 @@ jobs:
         with:
           python-version: '3.11'
 
-      - name: Install x86_64 dependencies via Rosetta
-        # `arch -x86_64` forces pip into x86_64 mode so it resolves
-        # x86_64 wheels (the universal2 setup-python Python defaults
-        # to arm64 wheels on Apple Silicon hardware).
+      - name: Install dependencies
         run: |
           set -euo pipefail
-          arch -x86_64 python -m pip install --upgrade pip
-          arch -x86_64 python -m pip install -r requirements.txt pyinstaller
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt pyinstaller
 
-      - name: Build LocalPDF.app (x86_64)
+      - name: Build LocalPDF.app (arm64)
         env:
           LOCALPDF_VERSION: ${{ inputs.version }}
-          LOCALPDF_TARGET_ARCH: x86_64
+          LOCALPDF_TARGET_ARCH: arm64
         run: |
           set -euo pipefail
-          arch -x86_64 python -m PyInstaller LocalPDF.spec --clean --noconfirm
+          pyinstaller LocalPDF.spec --clean --noconfirm
           ls -la dist/
 
       - name: Import signing certificates

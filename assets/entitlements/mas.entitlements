@@ -14,6 +14,14 @@
 -->
 <plist version="1.0">
 <dict>
+    <!-- Required by App Store Connect: must match TEAMID.BUNDLEID
+         and the AppID in the embedded provisioning profile. -->
+    <key>com.apple.application-identifier</key>
+    <string>96AWNCUUL8.ai.localpdf.desktop</string>
+
+    <key>com.apple.developer.team-identifier</key>
+    <string>96AWNCUUL8</string>
+
     <key>com.apple.security.app-sandbox</key>
     <true/>
 
