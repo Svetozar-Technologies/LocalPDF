@@ -138,11 +138,32 @@ echo "    Signed $SIGN_COUNT loose Mach-O files."
 
 echo ""
 echo "==> Signing frameworks (phase 2)..."
+# Pass --identifier matching the framework's own CFBundleIdentifier — App
+# Store Connect's validator rejects packages where signature identifier
+# doesn't match the bundle identifier.
 FW_COUNT=0
 while IFS= read -r -d '' fw; do
+    fw_name=$(basename "$fw" .framework)
+    fw_id=""
+    for candidate in \
+        "$fw/Versions/Current/Resources/Info.plist" \
+        "$fw/Resources/Info.plist" \
+        "$fw/Contents/Info.plist"; do
+        if [ -f "$candidate" ]; then
+            id=$(/usr/libexec/PlistBuddy -c "Print :CFBundleIdentifier" "$candidate" 2>/dev/null || echo "")
+            if [ -n "$id" ]; then
+                fw_id="$id"
+                break
+            fi
+        fi
+    done
+    if [ -z "$fw_id" ]; then
+        fw_id="ai.localpdf.framework.${fw_name}"
+    fi
     codesign --force --options runtime --timestamp \
         --sign "$LOCALPDF_APP_IDENTITY" \
         --entitlements "$ENTITLEMENTS" \
+        --identifier "$fw_id" \
         "$fw" >/dev/null
     FW_COUNT=$((FW_COUNT + 1))
 done < <(find "$APP/Contents" -depth -name "*.framework" -type d -print0)

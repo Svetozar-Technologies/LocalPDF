@@ -128,16 +128,34 @@ jobs:
           echo "Phase 1: signed $COUNT loose Mach-O files."
 
           # Phase 2: Sign each *.framework as a bundle, deepest first.
-          # Pass --identifier explicitly so codesign doesn't get confused
-          # by PyInstaller's stripped-down framework layout.
+          # The --identifier we pass MUST match the framework's own
+          # CFBundleIdentifier — App Store Connect validation rejects the
+          # package otherwise. Read it from the framework's Info.plist.
           FW_COUNT=0
           while IFS= read -r -d '' fw; do
               fw_name=$(basename "$fw" .framework)
-              fw_id="ai.localpdf.framework.${fw_name}"
+              fw_id=""
+              for candidate in \
+                  "$fw/Versions/Current/Resources/Info.plist" \
+                  "$fw/Resources/Info.plist" \
+                  "$fw/Contents/Info.plist"; do
+                  if [ -f "$candidate" ]; then
+                      id=$(/usr/libexec/PlistBuddy -c "Print :CFBundleIdentifier" "$candidate" 2>/dev/null || echo "")
+                      if [ -n "$id" ]; then
+                          fw_id="$id"
+                          break
+                      fi
+                  fi
+              done
+              if [ -z "$fw_id" ]; then
+                  # Framework has no Info.plist — fall back so codesign doesn't error.
+                  fw_id="ai.localpdf.framework.${fw_name}"
+              fi
               codesign --force --options runtime --timestamp \
                   --sign "$APP_ID" --entitlements "$ENT" \
                   --identifier "$fw_id" \
                   "$fw" >/dev/null
+              echo "  $fw -> $fw_id"
               FW_COUNT=$((FW_COUNT + 1))
           done < <(find "$APP/Contents" -depth -name "*.framework" -type d -print0)
           echo "Phase 2: signed $FW_COUNT frameworks."
