@@ -10,6 +10,7 @@ from ui.components.drop_zone import DropZone
 from ui.components.file_size_input import FileSizeInput
 from ui.components.progress_widget import ProgressWidget
 from ui.components.result_card import ResultCard
+from ui.components.screen_header import ScreenHeader
 from workers.compress_worker import CompressWorker
 from core.compressor import CompressionConfig
 from core.utils import validate_pdf, get_output_path, format_file_size, check_disk_space
@@ -37,15 +38,7 @@ class CompressWidget(QWidget):
         layout.setContentsMargins(32, 24, 32, 24)
         layout.setSpacing(16)
 
-        # Title
-        title = QLabel(t("compress.title"))
-        title.setProperty("class", "sectionTitle")
-        layout.addWidget(title)
-
-        subtitle = QLabel(t("compress.subtitle"))
-        subtitle.setProperty("class", "sectionSubtitle")
-        subtitle.setWordWrap(True)
-        layout.addWidget(subtitle)
+        layout.addWidget(ScreenHeader(t("compress.title"), t("compress.subtitle")))
 
         # Drop zone
         self._drop_zone = DropZone(

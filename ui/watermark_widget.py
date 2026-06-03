@@ -15,6 +15,7 @@ from PyQt6.QtGui import QImage, QPixmap
 from ui.components.drop_zone import DropZone
 from ui.components.progress_widget import ProgressWidget
 from ui.components.result_card import ResultCard
+from ui.components.screen_header import ScreenHeader
 from workers.watermark_worker import WatermarkWorker
 from core.watermark import TextWatermarkConfig, ImageWatermarkConfig
 from core.utils import validate_pdf, get_output_path, check_disk_space
@@ -42,14 +43,7 @@ class WatermarkWidget(QWidget):
         layout.setContentsMargins(32, 24, 32, 24)
         layout.setSpacing(16)
 
-        title = QLabel(t("watermark.title"))
-        title.setProperty("class", "sectionTitle")
-        layout.addWidget(title)
-
-        subtitle = QLabel(t("watermark.subtitle"))
-        subtitle.setProperty("class", "sectionSubtitle")
-        subtitle.setWordWrap(True)
-        layout.addWidget(subtitle)
+        layout.addWidget(ScreenHeader(t("watermark.title"), t("watermark.subtitle")))
 
         # Drop zone
         self._drop_zone = DropZone(

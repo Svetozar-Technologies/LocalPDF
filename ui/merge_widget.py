@@ -10,6 +10,7 @@ from ui.components.multi_drop_zone import MultiDropZone
 from ui.components.file_list_widget import FileListWidget
 from ui.components.progress_widget import ProgressWidget
 from ui.components.result_card import ResultCard
+from ui.components.screen_header import ScreenHeader
 from workers.merge_worker import MergeWorker
 from core.utils import validate_pdf, get_output_path, format_file_size, check_disk_space
 from i18n import t
@@ -34,14 +35,7 @@ class MergeWidget(QWidget):
         layout.setContentsMargins(32, 24, 32, 24)
         layout.setSpacing(16)
 
-        title = QLabel(t("merge.title"))
-        title.setProperty("class", "sectionTitle")
-        layout.addWidget(title)
-
-        subtitle = QLabel(t("merge.subtitle"))
-        subtitle.setProperty("class", "sectionSubtitle")
-        subtitle.setWordWrap(True)
-        layout.addWidget(subtitle)
+        layout.addWidget(ScreenHeader(t("merge.title"), t("merge.subtitle")))
 
         self._drop_zone = MultiDropZone(
             accepted_extensions=[".pdf"],

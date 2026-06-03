@@ -11,6 +11,7 @@ from ui.components.multi_drop_zone import MultiDropZone
 from ui.components.file_list_widget import FileListWidget
 from ui.components.progress_widget import ProgressWidget
 from ui.components.result_card import ResultCard
+from ui.components.screen_header import ScreenHeader
 from workers.image_to_pdf_worker import ImageToPdfWorker
 from core.image_to_pdf import PageOrientation
 from core.utils import validate_image, get_output_path, format_file_size, check_disk_space
@@ -36,14 +37,7 @@ class ImageToPdfWidget(QWidget):
         layout.setContentsMargins(32, 24, 32, 24)
         layout.setSpacing(16)
 
-        title = QLabel(t("image_to_pdf.title"))
-        title.setProperty("class", "sectionTitle")
-        layout.addWidget(title)
-
-        subtitle = QLabel(t("image_to_pdf.subtitle"))
-        subtitle.setProperty("class", "sectionSubtitle")
-        subtitle.setWordWrap(True)
-        layout.addWidget(subtitle)
+        layout.addWidget(ScreenHeader(t("image_to_pdf.title"), t("image_to_pdf.subtitle")))
 
         self._drop_zone = MultiDropZone(
             accepted_extensions=[".jpg", ".jpeg", ".png", ".bmp", ".tiff", ".tif", ".webp"],

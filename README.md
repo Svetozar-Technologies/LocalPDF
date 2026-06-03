@@ -39,7 +39,6 @@ Your documents deserve privacy. LocalPDF compresses, merges, splits, protects, w
 ### Convert
 - **Image to PDF** - Convert images (JPG, PNG, etc.) to PDF
 - **PDF to Image** - Export PDF pages as PNG or JPEG (72-600 DPI)
-- **Convert PPT** - Convert PowerPoint presentations to PDF (via LibreOffice)
 
 ### Multi-Language Support
 LocalPDF is available in 8 languages:
@@ -90,7 +89,6 @@ Download the latest release for your platform from the [Releases](https://github
 
 - **macOS** 11.0+, **Windows** 10+, or **Linux** (Ubuntu 22.04+)
 - Python 3.9+ (when running from source)
-- LibreOffice (optional, for PPT conversion)
 
 ## Technology
 

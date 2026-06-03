@@ -13,8 +13,6 @@ from typing import Optional, Tuple
 
 class FileType(Enum):
     PDF = "pdf"
-    PPT = "ppt"
-    PPTX = "pptx"
 
 
 @dataclass
@@ -25,14 +23,6 @@ class ValidationResult:
     file_type: Optional[FileType] = None
     is_encrypted: bool = False
     page_count: int = 0
-
-
-@dataclass
-class LibreOfficeInfo:
-    found: bool
-    path: str = ""
-    version: str = ""
-    install_instructions: str = ""
 
 
 def validate_pdf(file_path: str) -> ValidationResult:
@@ -183,64 +173,6 @@ def get_platform() -> str:
     if system == "windows":
         return "windows"
     return "linux"
-
-
-def detect_libreoffice() -> LibreOfficeInfo:
-    """Detect LibreOffice installation on the system."""
-    plat = get_platform()
-
-    search_paths = []
-    if plat == "macos":
-        search_paths = [
-            "/Applications/LibreOffice.app/Contents/MacOS/soffice",
-            os.path.expanduser("~/Applications/LibreOffice.app/Contents/MacOS/soffice"),
-            "/opt/homebrew/bin/soffice",
-            "soffice",
-        ]
-    elif plat == "windows":
-        search_paths = [
-            r"C:\Program Files\LibreOffice\program\soffice.exe",
-            r"C:\Program Files (x86)\LibreOffice\program\soffice.exe",
-            "soffice",
-        ]
-    else:
-        search_paths = [
-            "/usr/bin/soffice",
-            "/usr/bin/libreoffice",
-            "soffice",
-            "libreoffice",
-        ]
-
-    for path in search_paths:
-        resolved = shutil.which(path) if not os.path.isabs(path) else path
-        if resolved and os.path.isfile(resolved):
-            # Try to get version
-            version = ""
-            try:
-                result = subprocess.run(
-                    [resolved, "--version"],
-                    capture_output=True, text=True, timeout=10,
-                )
-                version = result.stdout.strip()
-            except Exception:
-                pass
-            return LibreOfficeInfo(found=True, path=resolved, version=version)
-
-    return LibreOfficeInfo(
-        found=False,
-        install_instructions=get_libreoffice_install_instructions(),
-    )
-
-
-def get_libreoffice_install_instructions() -> str:
-    """Return platform-specific LibreOffice install instructions."""
-    from i18n import t
-    plat = get_platform()
-    if plat == "macos":
-        return t("lo_instructions.macos")
-    if plat == "windows":
-        return t("lo_instructions.windows")
-    return t("lo_instructions.linux")
 
 
 def validate_image(file_path: str) -> ValidationResult:

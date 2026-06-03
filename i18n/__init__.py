@@ -1,10 +1,19 @@
-"""Internationalization (i18n) module for LocalPDF."""
+"""Internationalization (i18n) module for LocalPDF.
+
+Translations live as JSON files in this directory keyed by language code.
+`t()` looks up a string in the current language with English fallback.
+
+Language can be changed at runtime via `set_language(code)` — this reloads
+the in-memory translations and emits `language_changed` so the UI can
+rebuild itself without an app restart.
+"""
 
 import json
 import os
 from collections import OrderedDict
+from typing import Optional
 
-from PyQt6.QtCore import QSettings
+from PyQt6.QtCore import QObject, QSettings, pyqtSignal
 
 from core.utils import get_asset_path
 
@@ -24,6 +33,23 @@ LANGUAGES = OrderedDict([
 _translations: dict = {}
 _fallback: dict = {}
 _current_lang: str = "en"
+
+
+class _Bus(QObject):
+    """Module-level signal bus for i18n events."""
+    language_changed = pyqtSignal(str)  # emits new language code
+
+
+_bus: Optional[_Bus] = None
+
+
+def bus() -> _Bus:
+    """Return the singleton signal bus. Created lazily so a QApplication
+    doesn't need to exist at import time."""
+    global _bus
+    if _bus is None:
+        _bus = _Bus()
+    return _bus
 
 
 def _load_json(code: str) -> dict:
@@ -81,7 +107,22 @@ def is_rtl() -> bool:
     return False
 
 
-def set_language(code: str):
-    """Save language preference. Takes effect on next app restart."""
+def set_language(code: str) -> bool:
+    """Switch language at runtime.
+
+    Persists the choice, reloads translations, and emits
+    `bus().language_changed`. Returns True if the language actually changed.
+    """
+    global _translations, _current_lang
+
+    if code not in LANGUAGES or code == _current_lang:
+        return False
+
     settings = QSettings("Svetozar Technologies", "LocalPDF")
     settings.setValue("language", code)
+
+    _current_lang = code
+    _translations = _load_json(code) if code != "en" else _fallback
+
+    bus().language_changed.emit(code)
+    return True

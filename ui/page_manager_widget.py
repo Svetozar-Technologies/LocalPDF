@@ -16,6 +16,7 @@ from i18n import t
 from ui.components.drop_zone import DropZone
 from ui.components.progress_widget import ProgressWidget
 from ui.components.result_card import ResultCard
+from ui.components.screen_header import ScreenHeader
 from ui.edit_view_widget import EditViewWidget
 from workers.page_manager_worker import ThumbnailWorker, EnhancedSaveWorker
 from core.page_manager import PageSource, PageSourceType, PageManager
@@ -220,15 +221,7 @@ class PageManagerWidget(QWidget):
         layout.setContentsMargins(32, 24, 32, 24)
         layout.setSpacing(16)
 
-        # Title
-        title = QLabel(t("page_manager.title"))
-        title.setProperty("class", "sectionTitle")
-        layout.addWidget(title)
-
-        subtitle = QLabel(t("page_manager.subtitle"))
-        subtitle.setProperty("class", "sectionSubtitle")
-        subtitle.setWordWrap(True)
-        layout.addWidget(subtitle)
+        layout.addWidget(ScreenHeader(t("page_manager.title"), t("page_manager.subtitle")))
 
         # Drop zone
         self._drop_zone = DropZone(

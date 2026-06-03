@@ -10,6 +10,7 @@ from PyQt6.QtCore import Qt
 from ui.components.drop_zone import DropZone
 from ui.components.progress_widget import ProgressWidget
 from ui.components.result_card import ResultCard
+from ui.components.screen_header import ScreenHeader
 from workers.protect_worker import ProtectWorker
 from core.protector import ProtectConfig, UnlockConfig
 from core.utils import validate_pdf, get_output_path, format_file_size
@@ -36,14 +37,7 @@ class ProtectWidget(QWidget):
         layout.setContentsMargins(32, 24, 32, 24)
         layout.setSpacing(16)
 
-        title = QLabel(t("protect.title"))
-        title.setProperty("class", "sectionTitle")
-        layout.addWidget(title)
-
-        subtitle = QLabel(t("protect.subtitle"))
-        subtitle.setProperty("class", "sectionSubtitle")
-        subtitle.setWordWrap(True)
-        layout.addWidget(subtitle)
+        layout.addWidget(ScreenHeader(t("protect.title"), t("protect.subtitle")))
 
         # Drop zone (accepts any PDF, including encrypted for unlock mode)
         self._drop_zone = DropZone(

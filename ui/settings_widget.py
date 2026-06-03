@@ -2,16 +2,16 @@
 
 from PyQt6.QtWidgets import (
     QWidget, QVBoxLayout, QHBoxLayout, QLabel, QPushButton, QGroupBox,
-    QFileDialog, QScrollArea, QComboBox, QMessageBox,
+    QFileDialog, QScrollArea, QComboBox,
 )
-from PyQt6.QtCore import Qt, QSettings
+from PyQt6.QtCore import QSettings
 
-from core.utils import detect_libreoffice, get_libreoffice_install_instructions
+from ui.components.screen_header import ScreenHeader
 from i18n import t, LANGUAGES, current_language, set_language
 
 
 class SettingsWidget(QWidget):
-    """Settings tab: theme, output folder, LibreOffice status."""
+    """Settings: theme, language, output folder, about."""
 
     def __init__(self, theme_manager=None, parent=None):
         super().__init__(parent)
@@ -29,10 +29,7 @@ class SettingsWidget(QWidget):
         layout.setContentsMargins(32, 24, 32, 24)
         layout.setSpacing(16)
 
-        # Title
-        title = QLabel(t("settings.title"))
-        title.setProperty("class", "sectionTitle")
-        layout.addWidget(title)
+        layout.addWidget(ScreenHeader(t("settings.title")))
 
         # Appearance
         appearance_group = QGroupBox(t("settings.appearance"))
@@ -88,28 +85,6 @@ class SettingsWidget(QWidget):
         output_layout.addLayout(folder_row)
         layout.addWidget(output_group)
 
-        # LibreOffice
-        lo_group = QGroupBox(t("settings.lo_group"))
-        lo_layout = QVBoxLayout(lo_group)
-
-        self._lo_label = QLabel(t("settings.lo_checking"))
-        self._lo_label.setWordWrap(True)
-        lo_layout.addWidget(self._lo_label)
-
-        self._lo_auto_install_btn = QPushButton(t("settings.lo_auto_install"))
-        self._lo_auto_install_btn.setObjectName("primaryButton")
-        self._lo_auto_install_btn.clicked.connect(self._auto_install_lo)
-        self._lo_auto_install_btn.hide()
-        lo_layout.addWidget(self._lo_auto_install_btn)
-
-        self._lo_install_btn = QPushButton(t("settings.lo_instructions"))
-        self._lo_install_btn.setProperty("class", "secondaryButton")
-        self._lo_install_btn.clicked.connect(self._show_lo_instructions)
-        self._lo_install_btn.hide()
-        lo_layout.addWidget(self._lo_install_btn)
-
-        layout.addWidget(lo_group)
-
         # About
         about_group = QGroupBox(t("settings.about"))
         about_layout = QVBoxLayout(about_group)
@@ -127,8 +102,6 @@ class SettingsWidget(QWidget):
         main_layout.setContentsMargins(0, 0, 0, 0)
         main_layout.addWidget(scroll)
 
-        # Refresh status
-        self._refresh_lo_status()
         self._update_theme_button()
 
     def _toggle_theme(self):
@@ -147,10 +120,10 @@ class SettingsWidget(QWidget):
     def _on_language_changed(self, index: int):
         code = self._lang_combo.currentData()
         if code and code != current_language():
+            # set_language() reloads translations and emits language_changed
+            # on the i18n bus; MainWindow listens and rebuilds the shell in
+            # place, so the user sees the new language immediately.
             set_language(code)
-            QMessageBox.information(
-                self, t("settings.restart_title"), t("settings.restart_msg"),
-            )
 
     def _browse_folder(self):
         folder = QFileDialog.getExistingDirectory(self, t("settings.select_folder"))
@@ -161,28 +134,3 @@ class SettingsWidget(QWidget):
     def _reset_folder(self):
         self._settings.remove("output_folder")
         self._folder_label.setText(t("settings.same_as_input"))
-
-    def _refresh_lo_status(self):
-        lo = detect_libreoffice()
-        if lo.found:
-            version = lo.version.split('\n')[0] if lo.version else "unknown version"
-            self._lo_label.setText(t("settings.lo_installed", version=version, path=lo.path))
-            self._lo_label.setProperty("class", "statusGreen")
-            self._lo_install_btn.hide()
-            self._lo_auto_install_btn.hide()
-        else:
-            self._lo_label.setText(t("settings.lo_not_installed"))
-            self._lo_label.setProperty("class", "statusRed")
-            self._lo_install_btn.show()
-            self._lo_auto_install_btn.show()
-
-    def _auto_install_lo(self):
-        from ui.libreoffice_install_dialog import LibreOfficeInstallDialog
-        dialog = LibreOfficeInstallDialog(self)
-        dialog.install_completed.connect(lambda _: self._refresh_lo_status())
-        dialog.exec()
-
-    def _show_lo_instructions(self):
-        instructions = get_libreoffice_install_instructions()
-        QMessageBox.information(self, t("settings.lo_install_title"), instructions)
-

@@ -11,6 +11,7 @@ from ui.components.file_list_widget import FileListWidget, FileStatus
 from ui.components.file_size_input import FileSizeInput
 from ui.components.progress_widget import ProgressWidget
 from ui.components.result_card import ResultCard
+from ui.components.screen_header import ScreenHeader
 from workers.batch_compress_worker import BatchCompressWorker
 from core.utils import validate_pdf, format_file_size
 from i18n import t
@@ -35,14 +36,7 @@ class BatchCompressWidget(QWidget):
         layout.setContentsMargins(32, 24, 32, 24)
         layout.setSpacing(16)
 
-        title = QLabel(t("batch_compress.title"))
-        title.setProperty("class", "sectionTitle")
-        layout.addWidget(title)
-
-        subtitle = QLabel(t("batch_compress.subtitle"))
-        subtitle.setProperty("class", "sectionSubtitle")
-        subtitle.setWordWrap(True)
-        layout.addWidget(subtitle)
+        layout.addWidget(ScreenHeader(t("batch_compress.title"), t("batch_compress.subtitle")))
 
         self._drop_zone = MultiDropZone(
             accepted_extensions=[".pdf"],

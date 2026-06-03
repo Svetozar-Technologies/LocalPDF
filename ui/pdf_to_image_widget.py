@@ -11,6 +11,7 @@ from PyQt6.QtCore import Qt
 from ui.components.drop_zone import DropZone
 from ui.components.progress_widget import ProgressWidget
 from ui.components.result_card import ResultCard
+from ui.components.screen_header import ScreenHeader
 from workers.pdf_to_image_worker import PDFToImageWorker
 from core.pdf_to_image import ImageFormat
 from core.splitter import PageRangeParser
@@ -39,14 +40,7 @@ class PDFToImageWidget(QWidget):
         layout.setContentsMargins(32, 24, 32, 24)
         layout.setSpacing(16)
 
-        title = QLabel(t("pdf_to_image.title"))
-        title.setProperty("class", "sectionTitle")
-        layout.addWidget(title)
-
-        subtitle = QLabel(t("pdf_to_image.subtitle"))
-        subtitle.setProperty("class", "sectionSubtitle")
-        subtitle.setWordWrap(True)
-        layout.addWidget(subtitle)
+        layout.addWidget(ScreenHeader(t("pdf_to_image.title"), t("pdf_to_image.subtitle")))
 
         # Drop zone
         self._drop_zone = DropZone(

@@ -1,0 +1,258 @@
+name: Build MAS .pkg (universal2)
+
+# Universal2 (arm64 + x86_64) Mac App Store build.
+#
+# Strategy: PyMuPDF doesn't ship universal2 wheels, so we can't pip-install
+# universal2 directly. Instead we build the .app twice — once per architecture
+# on a matching GitHub runner — then a merge job uses `lipo` to fuse every
+# Mach-O binary into a fat (universal2) version. The merged .app is signed
+# once, and productbuild produces the signed .pkg.
+#
+# Required GitHub Secrets (Settings → Secrets and variables → Actions):
+#
+#   MAS_APP_CERT_P12_BASE64       — base64 of Mac App Distribution .p12
+#   MAS_INSTALLER_CERT_P12_BASE64 — base64 of Mac Installer Distribution .p12
+#   MAS_CERT_PASSWORD             — password set when exporting the .p12s
+#   MAS_KEYCHAIN_PASSWORD         — any random string for the temp CI keychain
+#   MAS_PROVISIONING_PROFILE_BASE64 — base64 of embedded.provisionprofile
+#   MAS_APP_IDENTITY              — "3rd Party Mac Developer Application: Name (TEAMID)"
+#   MAS_INSTALLER_IDENTITY        — "3rd Party Mac Developer Installer: Name (TEAMID)"
+#
+# Optional (for automatic upload to App Store Connect):
+#   APPSTORE_API_KEY_ID
+#   APPSTORE_API_ISSUER_ID
+#   APPSTORE_API_PRIVATE_KEY_BASE64
+
+on:
+  workflow_dispatch:
+    inputs:
+      version:
+        description: 'App version (must match App Store Connect)'
+        required: true
+        default: '1.0'
+      upload_to_app_store:
+        description: 'Auto-upload .pkg to App Store Connect'
+        required: false
+        default: 'false'
+        type: choice
+        options:
+          - 'false'
+          - 'true'
+
+jobs:
+  # --------------------------------------------------------------------------
+  # Two parallel builds: arm64 on macos-14, x86_64 on macos-13.
+  # --------------------------------------------------------------------------
+  build:
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - runner: macos-13     # Intel
+            arch: x86_64
+          - runner: macos-14     # Apple Silicon
+            arch: arm64
+    runs-on: ${{ matrix.runner }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt pyinstaller
+
+      - name: Build LocalPDF.app (${{ matrix.arch }})
+        env:
+          LOCALPDF_VERSION: ${{ inputs.version }}
+          LOCALPDF_TARGET_ARCH: ${{ matrix.arch }}
+        run: |
+          pyinstaller LocalPDF.spec --clean --noconfirm
+          ls -la dist/
+
+      - name: Upload .app artifact (${{ matrix.arch }})
+        uses: actions/upload-artifact@v4
+        with:
+          name: LocalPDF-${{ matrix.arch }}-app
+          path: dist/LocalPDF.app
+          retention-days: 7
+          include-hidden-files: true
+
+  # --------------------------------------------------------------------------
+  # Merge + sign + .pkg on Apple Silicon runner.
+  # --------------------------------------------------------------------------
+  merge-sign:
+    needs: build
+    runs-on: macos-14
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Download arm64 .app
+        uses: actions/download-artifact@v4
+        with:
+          name: LocalPDF-arm64-app
+          path: arm64-build/LocalPDF.app
+
+      - name: Download x86_64 .app
+        uses: actions/download-artifact@v4
+        with:
+          name: LocalPDF-x86_64-app
+          path: x86_64-build/LocalPDF.app
+
+      - name: Merge into universal2 with lipo
+        run: |
+          set -euo pipefail
+          mkdir -p dist
+
+          # Start from arm64 as the base (any non-Mach-O files come from here).
+          cp -R arm64-build/LocalPDF.app dist/LocalPDF.app
+
+          # Also copy any x86_64-only files (rare, but defends against arch-
+          # specific wheel contents).
+          rsync -a --ignore-existing x86_64-build/LocalPDF.app/ dist/LocalPDF.app/
+
+          MERGED=0
+          SINGLE=0
+          while IFS= read -r -d '' arm_file; do
+              rel="${arm_file#dist/LocalPDF.app/}"
+              x86_file="x86_64-build/LocalPDF.app/$rel"
+
+              if [ ! -f "$x86_file" ]; then
+                  continue
+              fi
+
+              # Only lipo Mach-O binaries. Skip identical files (text, etc.).
+              if file "$arm_file" 2>/dev/null | grep -q "Mach-O" \
+                 && file "$x86_file" 2>/dev/null | grep -q "Mach-O"; then
+                  if cmp -s "$arm_file" "$x86_file"; then
+                      # Already byte-identical (rare for binaries) — leave alone.
+                      SINGLE=$((SINGLE + 1))
+                      continue
+                  fi
+                  if lipo -create "$arm_file" "$x86_file" -output "$arm_file.universal" 2>/dev/null; then
+                      mv "$arm_file.universal" "$arm_file"
+                      MERGED=$((MERGED + 1))
+                  else
+                      echo "::warning::lipo failed for $rel — keeping arm64 version"
+                  fi
+              fi
+          done < <(find dist/LocalPDF.app/Contents -type f -print0)
+
+          echo "Universal2 merge complete: $MERGED Mach-O files merged, $SINGLE identical, others copied as-is."
+
+          # Sanity-check the main executable is now universal.
+          lipo -info dist/LocalPDF.app/Contents/MacOS/LocalPDF
+
+      - name: Import signing certificates
+        env:
+          APP_CERT_B64: ${{ secrets.MAS_APP_CERT_P12_BASE64 }}
+          INSTALLER_CERT_B64: ${{ secrets.MAS_INSTALLER_CERT_P12_BASE64 }}
+          CERT_PASSWORD: ${{ secrets.MAS_CERT_PASSWORD }}
+          KEYCHAIN_PASSWORD: ${{ secrets.MAS_KEYCHAIN_PASSWORD }}
+        run: |
+          set -euo pipefail
+          KEYCHAIN="$RUNNER_TEMP/mas-signing.keychain-db"
+          APP_P12="$RUNNER_TEMP/cert-app.p12"
+          INSTALLER_P12="$RUNNER_TEMP/cert-installer.p12"
+
+          echo "$APP_CERT_B64"       | base64 --decode > "$APP_P12"
+          echo "$INSTALLER_CERT_B64" | base64 --decode > "$INSTALLER_P12"
+
+          security create-keychain -p "$KEYCHAIN_PASSWORD" "$KEYCHAIN"
+          security set-keychain-settings -lut 21600 "$KEYCHAIN"
+          security unlock-keychain -p "$KEYCHAIN_PASSWORD" "$KEYCHAIN"
+
+          security import "$APP_P12"       -P "$CERT_PASSWORD" -A -t cert -f pkcs12 -k "$KEYCHAIN"
+          security import "$INSTALLER_P12" -P "$CERT_PASSWORD" -A -t cert -f pkcs12 -k "$KEYCHAIN"
+
+          security set-key-partition-list -S apple-tool:,apple: -s -k "$KEYCHAIN_PASSWORD" "$KEYCHAIN"
+          security list-keychains -d user -s "$KEYCHAIN" $(security list-keychains -d user | tr -d '"')
+          security default-keychain -s "$KEYCHAIN"
+
+          rm -f "$APP_P12" "$INSTALLER_P12"
+
+      - name: Embed provisioning profile
+        env:
+          PROFILE_B64: ${{ secrets.MAS_PROVISIONING_PROFILE_BASE64 }}
+        run: |
+          set -euo pipefail
+          echo "$PROFILE_B64" | base64 --decode > "dist/LocalPDF.app/Contents/embedded.provisionprofile"
+          ls -la dist/LocalPDF.app/Contents/embedded.provisionprofile
+
+      - name: Sign every Mach-O binary in the universal2 bundle
+        env:
+          APP_ID: ${{ secrets.MAS_APP_IDENTITY }}
+        run: |
+          set -euo pipefail
+          ENT="$GITHUB_WORKSPACE/assets/entitlements/mas.entitlements"
+          COUNT=0
+          while IFS= read -r -d '' f; do
+              if file "$f" 2>/dev/null | grep -q "Mach-O"; then
+                  codesign --force --options runtime --timestamp \
+                      --sign "$APP_ID" --entitlements "$ENT" "$f" >/dev/null
+                  COUNT=$((COUNT + 1))
+              fi
+          done < <(find dist/LocalPDF.app/Contents -type f -print0)
+          echo "Signed $COUNT Mach-O files."
+
+      - name: Sign the outer .app
+        env:
+          APP_ID: ${{ secrets.MAS_APP_IDENTITY }}
+        run: |
+          set -euo pipefail
+          codesign --force --options runtime --timestamp \
+              --sign "$APP_ID" \
+              --entitlements "$GITHUB_WORKSPACE/assets/entitlements/mas.entitlements" \
+              dist/LocalPDF.app
+
+      - name: Verify signing
+        run: |
+          set -euo pipefail
+          codesign --verify --deep --strict --verbose=2 dist/LocalPDF.app
+          codesign --display --entitlements - dist/LocalPDF.app | head -40
+
+      - name: Build signed .pkg
+        env:
+          INSTALLER_ID: ${{ secrets.MAS_INSTALLER_IDENTITY }}
+          VERSION: ${{ inputs.version }}
+        run: |
+          set -euo pipefail
+          PKG="dist/LocalPDF-${VERSION}-mas.pkg"
+          productbuild \
+              --component dist/LocalPDF.app /Applications \
+              --sign "$INSTALLER_ID" \
+              "$PKG"
+          pkgutil --check-signature "$PKG"
+
+      - name: Upload .pkg artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: LocalPDF-${{ inputs.version }}-universal2-mas
+          path: dist/LocalPDF-*-mas.pkg
+          retention-days: 30
+
+      - name: Upload .app artifact (for screenshots)
+        uses: actions/upload-artifact@v4
+        with:
+          name: LocalPDF-${{ inputs.version }}-universal2-app
+          path: dist/LocalPDF.app
+          retention-days: 14
+          include-hidden-files: true
+
+      - name: Upload to App Store Connect
+        if: inputs.upload_to_app_store == 'true'
+        env:
+          API_KEY_B64: ${{ secrets.APPSTORE_API_PRIVATE_KEY_BASE64 }}
+          API_KEY_ID: ${{ secrets.APPSTORE_API_KEY_ID }}
+          API_ISSUER_ID: ${{ secrets.APPSTORE_API_ISSUER_ID }}
+        run: |
+          set -euo pipefail
+          mkdir -p ~/.appstoreconnect/private_keys
+          echo "$API_KEY_B64" | base64 --decode > "$HOME/.appstoreconnect/private_keys/AuthKey_${API_KEY_ID}.p8"
+          PKG=$(ls dist/LocalPDF-*-mas.pkg | head -1)
+          xcrun altool --upload-app --type osx --file "$PKG" \
+                       --apiKey "$API_KEY_ID" --apiIssuer "$API_ISSUER_ID"

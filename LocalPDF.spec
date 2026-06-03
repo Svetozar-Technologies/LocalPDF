@@ -5,6 +5,7 @@ LocalPDF macOS/Windows Application Spec File
 Build with: pyinstaller LocalPDF.spec --clean
 """
 
+import os
 import sys
 from pathlib import Path
 
@@ -12,6 +13,18 @@ block_cipher = None
 
 # Get the current directory
 ROOT = Path(SPECPATH)
+
+# ---------------------------------------------------------------------------
+# Build-time overrides (used by the Mac App Store flow in scripts/build_mas.sh
+# and by CI). The DMG build leaves them unset and gets the existing behavior.
+#
+#   LOCALPDF_VERSION       -> CFBundleVersion + CFBundleShortVersionString
+#   LOCALPDF_BUNDLE_ID     -> bundle_identifier (MAS may want a separate ID)
+#   LOCALPDF_TARGET_ARCH   -> 'universal2' for MAS submission; default native
+# ---------------------------------------------------------------------------
+APP_VERSION = os.environ.get('LOCALPDF_VERSION', '1.2.0')
+BUNDLE_ID = os.environ.get('LOCALPDF_BUNDLE_ID', 'ai.localpdf.desktop')
+TARGET_ARCH = os.environ.get('LOCALPDF_TARGET_ARCH') or None
 
 # Find PyQt6 plugins
 def find_pyqt6_plugins():
@@ -62,14 +75,12 @@ hiddenimports = [
     'core.compressor',
     'core.merger',
     'core.splitter',
-    'core.converter',
     'core.image_to_pdf',
     'core.pdf_to_image',
     'core.protector',
     'core.watermark',
     'core.branded_pdf',
     'core.utils',
-    'core.libreoffice_installer',
     'core.page_manager',
 
     # UI modules
@@ -83,7 +94,6 @@ hiddenimports = [
     'ui.watermark_widget',
     'ui.image_to_pdf_widget',
     'ui.pdf_to_image_widget',
-    'ui.convert_widget',
     'ui.settings_widget',
     'ui.theme',
     'ui.page_manager_widget',
@@ -116,8 +126,6 @@ hiddenimports = [
     'workers.protect_worker',
     'workers.watermark_worker',
     'workers.image_to_pdf_worker',
-    'workers.convert_worker',
-    'workers.libreoffice_install_worker',
     'workers.page_manager_worker',
 
     # PDF libraries
@@ -175,8 +183,8 @@ exe = EXE(
     console=False,
     disable_windowed_traceback=False,
     argv_emulation=False,
-    target_arch=None,
-    codesign_identity=None,
+    target_arch=TARGET_ARCH,
+    codesign_identity=None,  # build_mas.sh handles signing post-bundle
     entitlements_file=None,
     icon=app_icon,
 )
@@ -198,14 +206,14 @@ if sys.platform == 'darwin':
         coll,
         name='LocalPDF.app',
         icon='assets/icon.icns',
-        bundle_identifier='ai.localpdf.desktop',
+        bundle_identifier=BUNDLE_ID,
         info_plist={
             'CFBundleName': 'LocalPDF',
             'CFBundleDisplayName': 'LocalPDF',
-            'CFBundleVersion': '1.2.0',
-            'CFBundleShortVersionString': '1.2.0',
+            'CFBundleVersion': APP_VERSION,
+            'CFBundleShortVersionString': APP_VERSION,
             'CFBundleExecutable': 'LocalPDF',
-            'CFBundleIdentifier': 'ai.localpdf.desktop',
+            'CFBundleIdentifier': BUNDLE_ID,
             'NSHighResolutionCapable': True,
             'NSRequiresAquaSystemAppearance': False,
             'LSMinimumSystemVersion': '11.0',
@@ -222,7 +230,14 @@ if sys.platform == 'darwin':
             'NSDownloadsFolderUsageDescription': 'LocalPDF needs access to save processed documents.',
             'LSApplicationCategoryType': 'public.app-category.productivity',
             'NSPrincipalClass': 'NSApplication',
-            'NSHumanReadableCopyright': 'Copyright © 2025 PrepLadder. MIT License.',
+            'NSHumanReadableCopyright': 'Copyright © 2025 Svetozar Technologies. MIT License.',
             'CFBundleGetInfoString': 'LocalPDF - Private PDF Tools. 100% Offline.',
+
+            # Export compliance: AES-256 PDF encryption is standard library
+            # cryptography for authentication, exempt from US export reqs.
+            'ITSAppUsesNonExemptEncryption': False,
+
+            # No Sparkle / no in-app updates — App Store handles updates.
+            'LSUIElement': False,
         },
     )

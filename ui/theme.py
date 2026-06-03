@@ -4,7 +4,7 @@ import sys
 from pathlib import Path
 from PyQt6.QtWidgets import QApplication
 from PyQt6.QtCore import QSettings
-from PyQt6.QtGui import QFont
+from PyQt6.QtGui import QFont, QFontDatabase
 
 from core.utils import get_asset_path
 
@@ -22,13 +22,28 @@ class ThemeManager:
         self._setup_font()
 
     def _setup_font(self):
-        """Set system-native font for macOS/Windows."""
+        """Set system-native font with sensible fallbacks.
+
+        On macOS, asking Qt for the system font by name (".AppleSystemUIFont"
+        / "SF Pro Text") triggers font-database warnings since those families
+        aren't directly addressable. QFontDatabase.systemFont() returns the
+        actual platform-resolved default.
+        """
         if sys.platform == "darwin":
-            font = QFont(".AppleSystemUIFont", 13)
+            # Helvetica Neue ships with every macOS and renders cleanly under
+            # Qt; the platform "system font" (.AppleSystemUIFont) triggers
+            # an OpenType warning even though it works visually.
+            font = QFont("Helvetica Neue")
+            font.setFamilies(["Helvetica Neue", "Helvetica", "Arial"])
+            font.setPointSize(13)
         elif sys.platform == "win32":
-            font = QFont("Segoe UI", 10)
+            font = QFont("Segoe UI")
+            font.setFamilies(["Segoe UI", "Arial"])
+            font.setPointSize(10)
         else:
-            font = QFont("Ubuntu", 10)
+            font = QFont("Ubuntu")
+            font.setFamilies(["Ubuntu", "DejaVu Sans"])
+            font.setPointSize(10)
         font.setHintingPreference(QFont.HintingPreference.PreferNoHinting)
         self._app.setFont(font)
 
